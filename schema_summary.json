@@ -1,0 +1,4725 @@
+[
+  {
+    "name": "arttypes",
+    "columns": [
+      {
+        "name": "IDArttype",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Arttype",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDArttype`)"
+    ]
+  },
+  {
+    "name": "authorroles",
+    "columns": [
+      {
+        "name": "Authorrole",
+        "type": "varchar(20)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Authorrole_ITA",
+        "type": "varchar(20)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "WE",
+        "type": "char(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`Authorrole`)",
+      "UNIQUE KEY `Authorrole_ITA` (`Authorrole_ITA`)",
+      "KEY `WE` (`WE`)"
+    ]
+  },
+  {
+    "name": "authors",
+    "columns": [
+      {
+        "name": "IdAuthor",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Gendre",
+        "type": "varchar(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Name",
+        "type": "varchar(150)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Surname",
+        "type": "varchar(150)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "AcronimusName",
+        "type": "varchar(150)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "AcronimusSurname",
+        "type": "varchar(150)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Nationality",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "AFilingDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "ACreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "ACreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "AFilingUser",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "enWikilink",
+        "type": "mediumtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Born",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Died",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "AuthorApproved",
+        "type": "char(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "PenName",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDMembreModify",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "ACDCnascita",
+        "type": "int(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'1'",
+        "comment": null
+      },
+      {
+        "name": "NascitaAnno",
+        "type": "int(4)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "NascitaMese",
+        "type": "int(2)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "NascitaGiorno",
+        "type": "int(2)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "morto",
+        "type": "int(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "ACDCmorte",
+        "type": "int(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'1'",
+        "comment": null
+      },
+      {
+        "name": "MorteAnno",
+        "type": "int(4)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "MorteMese",
+        "type": "int(2)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "MorteGiorno",
+        "type": "int(2)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDNazioneNascita",
+        "type": "int(3)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IdAuthor`)",
+      "KEY `WDIDX_writers_Nationality` (`Nationality`)",
+      "KEY `WDIDX_writers_Name` (`Name`)",
+      "KEY `WDIDX_writers_Surname` (`Surname`)",
+      "KEY `WDIDX_writers_AcronimusName` (`AcronimusName`)",
+      "KEY `WDIDX_writers_AcronimusSurname` (`AcronimusSurname`)",
+      "KEY `WDIDX_writers_WriterFilingDate` (`AFilingDate`)",
+      "KEY `WDIDX_writers_WriterFilingUser` (`AFilingUser`)",
+      "KEY `PenName` (`PenName`)",
+      "KEY `IDMembreModify` (`IDMembreModify`)",
+      "KEY `NascitaAnno` (`NascitaAnno`)",
+      "KEY `NascitaMese` (`NascitaMese`)",
+      "KEY `NascitaGiorno` (`NascitaGiorno`)",
+      "KEY `MorteAnno` (`MorteAnno`)",
+      "KEY `MorteMese` (`MorteMese`)",
+      "KEY `MorteGiorno` (`MorteGiorno`)",
+      "KEY `IDNazioneNascita` (`IDNazioneNascita`)",
+      "KEY `ACDCnascita` (`ACDCnascita`)",
+      "KEY `ACDCmorte` (`ACDCmorte`)",
+      "KEY `morto` (`morto`)",
+      "FULLTEXT KEY `Index_FullText_Author` (`Name`,`Surname`,`AcronimusName`,`AcronimusSurname`)",
+      "FULLTEXT KEY `acronimus` (`AcronimusName`,`AcronimusSurname`)",
+      "FULLTEXT KEY `name` (`Name`)",
+      "FULLTEXT KEY `surname` (`Surname`)",
+      "FULLTEXT KEY `acronimusName` (`AcronimusName`)",
+      "FULLTEXT KEY `acronimuSurname` (`AcronimusSurname`)"
+    ]
+  },
+  {
+    "name": "authors_editions",
+    "columns": [
+      {
+        "name": "IDauthors_editions",
+        "type": "bigint(20)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDedition",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IdAuthor",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Authorrole",
+        "type": "varchar(20)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "ModificationDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDauthors_editions`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `IDedition` (`IDedition`)",
+      "KEY `Authorrole` (`Authorrole`)",
+      "KEY `IdAuthor` (`IdAuthor`)"
+    ]
+  },
+  {
+    "name": "authors_links",
+    "columns": [
+      {
+        "name": "IDAuthor_Link",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDAuthor",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLink",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDTag",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDAuthor_Link`)",
+      "UNIQUE KEY `IDAuthorIDMembreLink` (`IDAuthor`,`IDLink`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `IDLink` (`IDLink`)",
+      "KEY `IDAuthor` (`IDAuthor`)"
+    ]
+  },
+  {
+    "name": "authors_tags",
+    "columns": [
+      {
+        "name": "IDAuthor_Tag",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDAuthor",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDTag",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDAuthor_Tag`)",
+      "KEY `IDAuthor` (`IDAuthor`)",
+      "KEY `IDTag` (`IDTag`)"
+    ]
+  },
+  {
+    "name": "authors_works",
+    "columns": [
+      {
+        "name": "IDAuthor_Works",
+        "type": "bigint(20)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDWork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IdAuthor",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Authorrole",
+        "type": "varchar(20)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "ModificationDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDAuthor_Works`)",
+      "KEY `WDIDX_writers_literaryworks_LiteraryWork` (`IDWork`)",
+      "KEY `WDIDX_writers_literaryworks_Writer` (`IdAuthor`)",
+      "KEY `WDIDX_writers_literaryworks_Writerrole` (`Authorrole`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "billet",
+    "columns": [
+      {
+        "name": "IDBillet",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDBlog",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "Titre",
+        "type": "varchar(64)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "''",
+        "comment": null
+      },
+      {
+        "name": "DateHeure",
+        "type": "datetime",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0000-00-00 00:00:00'",
+        "comment": null
+      },
+      {
+        "name": "Message",
+        "type": "longtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "AutoriseCommentaires",
+        "type": "tinyint(4)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDBillet`)",
+      "KEY `IDBlog` (`IDBlog`)",
+      "KEY `DateHeure` (`DateHeure`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "bindings",
+    "columns": [
+      {
+        "name": "IDBinding",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Binding",
+        "type": "varchar(50)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "BindingDescription",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDBinding`)"
+    ]
+  },
+  {
+    "name": "blog",
+    "columns": [
+      {
+        "name": "IDBlog",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Nom",
+        "type": "varchar(40)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "''",
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDBlog`)",
+      "UNIQUE KEY `Nom` (`Nom`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "bookmarks",
+    "columns": [
+      {
+        "name": "IDBookmark",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDReading",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "BookmarkDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Bookmark",
+        "type": "int(6)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "BookmarkComment",
+        "type": "longtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "ShareComment",
+        "type": "char(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'f'",
+        "comment": null
+      },
+      {
+        "name": "Gradimento",
+        "type": "double",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "UseGradimento",
+        "type": "char(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDBookmark`)",
+      "KEY `IDReading` (`IDReading`)",
+      "KEY `ShareComment` (`ShareComment`)",
+      "FULLTEXT KEY `Comment` (`BookmarkComment`)"
+    ]
+  },
+  {
+    "name": "borrow",
+    "columns": [
+      {
+        "name": "IDTransaction",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "FilingDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "IDFriend",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDDate",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDTransaction`)"
+    ]
+  },
+  {
+    "name": "colors",
+    "columns": [
+      {
+        "name": "IDColor",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Color",
+        "type": "varchar(150)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Codifica",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDColor`)",
+      "FULLTEXT KEY `Color` (`Color`)"
+    ]
+  },
+  {
+    "name": "copies",
+    "columns": [
+      {
+        "name": "IDCopy",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "ShareCopy",
+        "type": "char(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'f'",
+        "comment": null
+      },
+      {
+        "name": "Code",
+        "type": "varchar(8)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": "Chi ha creato"
+      },
+      {
+        "name": "IDEdition",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "IDShelf",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'-1'",
+        "comment": null
+      },
+      {
+        "name": "CodeCopy",
+        "type": "bigint(20)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "dataAcquisto",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDTipoAcquisto",
+        "type": "int(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDFriendEntrata",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "prezzo",
+        "type": "double",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "commento",
+        "type": "varchar(450)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "indice",
+        "type": "int(5)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "dataUscita",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDTipoUscita",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDFriendUscita",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "commentoUscita",
+        "type": "varchar(450)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "prezzoVendita",
+        "type": "double",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDCopy`)",
+      "KEY `IDEdition` (`IDEdition`) USING BTREE",
+      "KEY `IDMembre` (`IDMembre`) USING BTREE",
+      "KEY `IDShelf` (`IDShelf`)",
+      "KEY `CodeCopy` (`CodeCopy`)",
+      "KEY `dataAcquisto` (`dataAcquisto`)",
+      "KEY `tipoAcquisto` (`IDTipoAcquisto`)",
+      "KEY `IDFriend` (`IDFriendEntrata`)",
+      "KEY `Posizione` (`indice`)",
+      "KEY `IDTipoUscita` (`IDTipoUscita`)",
+      "KEY `IDFriendUscita` (`IDFriendUscita`)",
+      "KEY `dataUscita` (`dataUscita`)",
+      "KEY `Code` (`Code`)",
+      "KEY `ShareCopy` (`ShareCopy`)",
+      "FULLTEXT KEY `commentoUscita` (`commentoUscita`)",
+      "FULLTEXT KEY `commento` (`commento`)"
+    ]
+  },
+  {
+    "name": "costanti_utente",
+    "columns": [
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDCostante",
+        "type": "varchar(25)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Costante",
+        "type": "longtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLingua",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'3'",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDMembre`,`IDCostante`,`IDLingua`)",
+      "KEY `lingua` (`IDLingua`) USING BTREE",
+      "FULLTEXT KEY `Costante` (`Costante`)"
+    ]
+  },
+  {
+    "name": "currencies",
+    "columns": [
+      {
+        "name": "IDCurrency",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Currency",
+        "type": "varchar(10)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDCurrency`)"
+    ]
+  },
+  {
+    "name": "dates",
+    "columns": [
+      {
+        "name": "IDDate",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Date",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Description",
+        "type": "varchar(50)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDFriend",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDDate`)",
+      "KEY `IDFriend` (`IDFriend`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `IDFriend_2` (`IDFriend`)",
+      "FULLTEXT KEY `Description` (`Description`)"
+    ]
+  },
+  {
+    "name": "diritti",
+    "columns": [
+      {
+        "name": "IDDiritti",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Diritti",
+        "type": "varchar(50)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDDiritti`)",
+      "KEY `Privilege` (`Diritti`)"
+    ]
+  },
+  {
+    "name": "editions",
+    "columns": [
+      {
+        "name": "IDedition",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Tipo",
+        "type": "varchar(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Title",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "SubTitle",
+        "type": "varchar(255)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "PublishingYear",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Language",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Publisher",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Pages",
+        "type": "int(6)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Binding",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "EditionFilingDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "ECreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "ECreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "EditionFilingUser",
+        "type": "bigint(20)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "EditionApproved",
+        "type": "varchar(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "ISBN10",
+        "type": "varchar(13)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "ISBN13",
+        "type": "varchar(13)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDSerie",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Height",
+        "type": "int(3)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Width",
+        "type": "int(3)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Thickness",
+        "type": "int(3)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Weight",
+        "type": "int(4)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDColor",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDMembreModify",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "AuthorsIDs",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "AuthorANameSurname",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CoAuthorsIDs",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CoAuthorANameSurname",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "TranslatorIDS",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "TranslatorAcronimus",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "EditorsIDs",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "EditorsAcronimus",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDedition`)",
+      "KEY `WDIDX_editions_PublishingYear` (`PublishingYear`)",
+      "KEY `WDIDX_editions_Binding` (`Binding`)",
+      "KEY `Language` (`Language`)",
+      "KEY `Publisher` (`Publisher`)",
+      "KEY `Title` (`Title`)",
+      "KEY `ISBN10` (`ISBN10`)",
+      "KEY `ISBN13` (`ISBN13`)",
+      "KEY `IDSerie` (`IDSerie`)",
+      "KEY `IDMembreModify` (`IDMembreModify`)",
+      "KEY `Tipo` (`Tipo`)",
+      "FULLTEXT KEY `WDIDX_editions_Title` (`Title`)",
+      "FULLTEXT KEY `AuthorsIDs` (`AuthorsIDs`)",
+      "FULLTEXT KEY `AuthorANameSurname` (`CoAuthorANameSurname`)",
+      "FULLTEXT KEY `CoAuthorsIDs` (`CoAuthorsIDs`)",
+      "FULLTEXT KEY `CoAuthorANameSurname` (`CoAuthorANameSurname`)",
+      "FULLTEXT KEY `TranslatorIDS` (`TranslatorIDS`)",
+      "FULLTEXT KEY `TranslatorAcronimus` (`TranslatorAcronimus`)",
+      "FULLTEXT KEY `EditorsIDs` (`EditorsIDs`)",
+      "FULLTEXT KEY `EditorsAcronimus` (`EditorsAcronimus`)",
+      "FULLTEXT KEY `SubTitle` (`SubTitle`)"
+    ]
+  },
+  {
+    "name": "editions_links",
+    "columns": [
+      {
+        "name": "IDedition_Link",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDedition",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLink",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDTag",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDedition_Link`)",
+      "UNIQUE KEY `IDAuthorIDMembreLink` (`IDedition`,`IDLink`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `IDLink` (`IDLink`)",
+      "KEY `IDAuthor` (`IDedition`)"
+    ]
+  },
+  {
+    "name": "editions_tags",
+    "columns": [
+      {
+        "name": "IDedition_Tag",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDedition",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDTag",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDedition_Tag`)",
+      "KEY `IDAuthor` (`IDedition`)",
+      "KEY `IDTag` (`IDTag`)"
+    ]
+  },
+  {
+    "name": "edizione_edizioni",
+    "columns": [
+      {
+        "name": "IDEdizioneR",
+        "type": "mediumint(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDEdizione",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Posizione",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "DataCreazione",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDEdizioneR`,`IDEdizione`)",
+      "KEY `IDRaccolta` (`IDEdizioneR`)",
+      "KEY `IDEdizione` (`IDEdizione`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `Posizione` (`Posizione`)"
+    ]
+  },
+  {
+    "name": "forms",
+    "columns": [
+      {
+        "name": "IDForm",
+        "type": "int(2)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Form",
+        "type": "varchar(35)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "FormDescription",
+        "type": "mediumtext",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDForm`)"
+    ]
+  },
+  {
+    "name": "forum",
+    "columns": [
+      {
+        "name": "IDForum",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "Libelle",
+        "type": "varchar(64)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Description",
+        "type": "longtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "DateCreation",
+        "type": "datetime",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0000-00-00 00:00:00'",
+        "comment": null
+      },
+      {
+        "name": "IDDernierTopic",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "IDDernierMessage",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "IDDernierUtilisateur",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "TotalTopic",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "IDAuteur",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "TotalMessage",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "UNIQUE KEY `IDForum` (`IDForum`)",
+      "KEY `DateCreation` (`DateCreation`)",
+      "KEY `IDDernierTopic` (`IDDernierTopic`)",
+      "KEY `IDDernierMessage` (`IDDernierMessage`)",
+      "KEY `IDDernierUtilisateur` (`IDDernierUtilisateur`)",
+      "KEY `IDAuteur` (`IDAuteur`)"
+    ]
+  },
+  {
+    "name": "friends",
+    "columns": [
+      {
+        "name": "IDFriend",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Name",
+        "type": "varchar(20)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Surname",
+        "type": "varchar(20)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Pseudo",
+        "type": "varchar(20)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDMembreLink",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "email",
+        "type": "varchar(50)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Relationship",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'4'",
+        "comment": null
+      },
+      {
+        "name": "DataInserimento",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "DataIDMemberLink",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "ShareReadings",
+        "type": "int(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDFriend`)",
+      "KEY `IDMembreLink` (`IDMembreLink`)",
+      "KEY `Relationship` (`Relationship`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `email` (`email`)",
+      "KEY `DataInserimento` (`DataInserimento`,`DataIDMemberLink`)",
+      "KEY `ShareReadings` (`ShareReadings`)",
+      "FULLTEXT KEY `Name` (`Name`)",
+      "FULLTEXT KEY `Surname` (`Surname`)",
+      "FULLTEXT KEY `Pseudo` (`Pseudo`)"
+    ]
+  },
+  {
+    "name": "generi",
+    "columns": [
+      {
+        "name": "IDGenere",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDPadre",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Genere",
+        "type": "varchar(250)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Genere_ITA",
+        "type": "varchar(250)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "nFigli",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Livello",
+        "type": "int(2)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDGenere`)",
+      "UNIQUE KEY `IDGenere` (`IDGenere`)",
+      "KEY `IDPadre` (`IDPadre`)",
+      "FULLTEXT KEY `Genere_ITA` (`Genere_ITA`)",
+      "FULLTEXT KEY `Genere_ING` (`Genere`)"
+    ]
+  },
+  {
+    "name": "generi_links",
+    "columns": [
+      {
+        "name": "IDGenere",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLink",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDGenere`,`IDLink`)",
+      "KEY `IDGenere` (`IDGenere`)",
+      "KEY `IDLink` (`IDLink`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "genres",
+    "columns": [
+      {
+        "name": "IDGenre",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "FictionNonfiction",
+        "type": "varchar(40)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Genre",
+        "type": "varchar(150)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "GenreDescription",
+        "type": "mediumtext",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDGenre`)"
+    ]
+  },
+  {
+    "name": "globali",
+    "columns": [
+      {
+        "name": "IDCostante",
+        "type": "varchar(25)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLingua",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'3'",
+        "comment": null
+      },
+      {
+        "name": "Costante",
+        "type": "longtext",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDCostante`,`IDLingua`) USING BTREE",
+      "KEY `IDCostante` (`IDCostante`)",
+      "KEY `lingua` (`IDLingua`)",
+      "FULLTEXT KEY `Costante` (`Costante`)"
+    ]
+  },
+  {
+    "name": "idgenere_idpadre",
+    "columns": [
+      {
+        "name": "IDGenere",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDPadre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDGenere`,`IDPadre`)",
+      "KEY `IDGenere` (`IDGenere`)",
+      "KEY `IDPadre` (`IDPadre`)"
+    ]
+  },
+  {
+    "name": "idwork_idgenere",
+    "columns": [
+      {
+        "name": "IDWork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDGenere",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Livello",
+        "type": "int(2)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "datetime",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "approved",
+        "type": "varchar(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'f'",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDWork`,`IDGenere`)",
+      "KEY `IDWork` (`IDWork`)",
+      "KEY `IDGenere` (`IDGenere`)",
+      "KEY `Livello` (`Livello`)"
+    ]
+  },
+  {
+    "name": "languages",
+    "columns": [
+      {
+        "name": "IDLanguage",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Language",
+        "type": "varchar(25)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "NativeSpeakersMillions",
+        "type": "double",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "MainlySpokenInCountry",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "LanguageNotes",
+        "type": "text",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "order",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "WikiPrefix",
+        "type": "text",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDLanguage`)",
+      "KEY `order` (`order`)",
+      "FULLTEXT KEY `c11` (`Language`)"
+    ]
+  },
+  {
+    "name": "libraries",
+    "columns": [
+      {
+        "name": "IDLibrary",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Library",
+        "type": "varchar(250)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Location",
+        "type": "varchar(250)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "LibraryOrdine",
+        "type": "int(10)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "date",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDLibrary`)",
+      "FULLTEXT KEY `Library` (`Library`)"
+    ]
+  },
+  {
+    "name": "links",
+    "columns": [
+      {
+        "name": "IDLink",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Url",
+        "type": "varchar(300)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLanguage",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDLink`)",
+      "KEY `IDLanguage` (`IDLanguage`)",
+      "FULLTEXT KEY `Url` (`Url`)"
+    ]
+  },
+  {
+    "name": "membre",
+    "columns": [
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Pseudo",
+        "type": "varchar(32)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Email",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Session",
+        "type": "varchar(64)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "MotDePasse",
+        "type": "varchar(32)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "HashMotDePasse",
+        "type": "varchar(64)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Token",
+        "type": "varchar(64)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IsAdmin",
+        "type": "int(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Language",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Name",
+        "type": "varchar(250)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Surname",
+        "type": "varchar(250)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "LetturePeriodo",
+        "type": "mediumtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Contatti",
+        "type": "mediumtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Librerie",
+        "type": "mediumtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Libri",
+        "type": "mediumtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDMembre`)",
+      "UNIQUE KEY `Email` (`Email`)",
+      "KEY `WDIDX_Membre_Session` (`Session`)",
+      "KEY `IsAdmin` (`IsAdmin`)",
+      "FULLTEXT KEY `Name` (`Name`,`Surname`)",
+      "FULLTEXT KEY `Pseudo` (`Pseudo`)"
+    ]
+  },
+  {
+    "name": "messages",
+    "columns": [
+      {
+        "name": "IDMessaggio",
+        "type": "int(22)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembreInvio",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": true,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembreDestinatario",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": true,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Data",
+        "type": "datetime",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Oggetto",
+        "type": "varchar(500)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Messaggio",
+        "type": "mediumtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "MittenteVisibile",
+        "type": "int(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "DestinatarioVisibile",
+        "type": "int(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDRichiedenteContatto",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": true,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "RichiestaEseguita",
+        "type": "int(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": true,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "popostapoCode",
+        "type": "bigint(20)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": true,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Letto",
+        "type": "int(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDMessaggio`)",
+      "UNIQUE KEY `IDMembreInvioDataIDMembreDestinatario` (`IDMembreInvio`,`Data`,`IDMembreDestinatario`)",
+      "KEY `IDMembreDestinatario` (`IDMembreDestinatario`)",
+      "KEY `IDMembreInvio` (`IDMembreInvio`)",
+      "KEY `MittenteVisibile` (`MittenteVisibile`)",
+      "KEY `DestinatarioVisibile` (`DestinatarioVisibile`)",
+      "KEY `IDRichiedenteContatto` (`IDRichiedenteContatto`)",
+      "KEY `RichiestaEseguita` (`RichiestaEseguita`)",
+      "KEY `popostapoCode` (`popostapoCode`)",
+      "KEY `IDMembreInvioData` (`IDMembreInvio`,`Data`)",
+      "KEY `Letto` (`Letto`)",
+      "FULLTEXT KEY `Oggetto` (`Oggetto`)",
+      "FULLTEXT KEY `Messaggio` (`Messaggio`)"
+    ]
+  },
+  {
+    "name": "nations",
+    "columns": [
+      {
+        "name": "IDNation",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Nation",
+        "type": "text",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Nation_ITA",
+        "type": "text",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Continent",
+        "type": "varchar(15)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDNation`)",
+      "UNIQUE KEY `nation_description` (`Nation`(50))",
+      "KEY `nation_continent` (`Continent`)"
+    ]
+  },
+  {
+    "name": "periodi",
+    "columns": [
+      {
+        "name": "IDPeriodo",
+        "type": "varchar(15)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "da",
+        "type": "text",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "a",
+        "type": "text",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "inizio",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "fine",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "durata",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "libelleITA",
+        "type": "varchar(50)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "libelleING",
+        "type": "varchar(50)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDPeriodo`)",
+      "KEY `fine` (`fine`)",
+      "KEY `durata` (`durata`)"
+    ]
+  },
+  {
+    "name": "publishers",
+    "columns": [
+      {
+        "name": "IdPublisher",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Publisher",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Nation",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Link",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "FilingDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "Approved",
+        "type": "char(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'f'",
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IdPublisher`)",
+      "KEY `Publisher` (`Publisher`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `Approved` (`Approved`)",
+      "KEY `Nation` (`Nation`)",
+      "FULLTEXT KEY `Link` (`Link`)",
+      "FULLTEXT KEY `Publisher_2` (`Publisher`)"
+    ]
+  },
+  {
+    "name": "purchase",
+    "columns": [
+      {
+        "name": "IDTransaction",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Price",
+        "type": "double",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "KEY `IDTransaction` (`IDTransaction`)"
+    ]
+  },
+  {
+    "name": "quotereferences",
+    "columns": [
+      {
+        "name": "IDquoteReference",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Literarywork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Arttype",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Artist",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Artwork",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "File",
+        "type": "longblob",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDquoteReference`)"
+    ]
+  },
+  {
+    "name": "raccolte_links",
+    "columns": [
+      {
+        "name": "IDRaccolta",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLink",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "DataCreazione",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDRaccolta`,`IDLink`) USING BTREE",
+      "KEY `IDRaccolta` (`IDRaccolta`)",
+      "KEY `IDLink` (`IDLink`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "readings",
+    "columns": [
+      {
+        "name": "IDReading",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "ShareReading",
+        "type": "char(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDEdition",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "StartDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "LastDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "PageBookmark",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Finito",
+        "type": "char(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'f'",
+        "comment": null
+      },
+      {
+        "name": "GradimentoMedio",
+        "type": "double",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDFriend",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDReading`)",
+      "KEY `IDEdition` (`IDEdition`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `Finito` (`Finito`)",
+      "KEY `StartDate` (`StartDate`)",
+      "KEY `IDFriend` (`IDFriend`)"
+    ]
+  },
+  {
+    "name": "relationships",
+    "columns": [
+      {
+        "name": "IDRelation",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Relationship",
+        "type": "varchar(50)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDRelation`)"
+    ]
+  },
+  {
+    "name": "series",
+    "columns": [
+      {
+        "name": "IDSerie",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDPublisher",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Serie",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Height",
+        "type": "int(3)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Width",
+        "type": "int(3)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDColor",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDForm",
+        "type": "int(2)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDGenre",
+        "type": "int(3)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDBinding",
+        "type": "int(3)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Link",
+        "type": "varchar(100)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "FilingDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Approved",
+        "type": "char(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDSerie`)",
+      "KEY `IDPublisher` (`IDPublisher`)",
+      "KEY `IDColor` (`IDColor`)",
+      "KEY `IDForm` (`IDForm`)",
+      "KEY `IDGenre` (`IDGenre`)",
+      "KEY `IDBinding` (`IDBinding`)",
+      "KEY `IDMembre` (`IDMembre`,`Approved`)",
+      "KEY `IDMembre_2` (`IDMembre`)",
+      "FULLTEXT KEY `Serie` (`Serie`)",
+      "FULLTEXT KEY `Link` (`Link`)"
+    ]
+  },
+  {
+    "name": "share_libraries",
+    "columns": [
+      {
+        "name": "IDShareLibrary",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLibrary",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "date",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "IDDiritti",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDShareLibrary`)",
+      "KEY `Privileges` (`IDDiritti`)",
+      "KEY `IDLibrary` (`IDLibrary`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `IDMembreIDDiritti` (`IDMembre`,`IDDiritti`)",
+      "KEY `IDLibraryIDDiritti` (`IDLibrary`,`IDDiritti`)"
+    ]
+  },
+  {
+    "name": "sharing_membre_author",
+    "columns": [
+      {
+        "name": "IdSharingMembreAuthor",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Author",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Membre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IdSharingMembreAuthor`)",
+      "KEY `AuthorSharingMember2` (`Membre`)",
+      "KEY `AuthorSharingMember1` (`Author`)"
+    ]
+  },
+  {
+    "name": "sharing_membre_edition",
+    "columns": [
+      {
+        "name": "IdSharingMembreAuthor",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDEdition",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IdSharingMembreAuthor`)",
+      "KEY `IDEdition` (`IDEdition`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "sharing_membre_publisher",
+    "columns": [
+      {
+        "name": "IdSharingMembrePublisher",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDPublisher",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IdSharingMembrePublisher`)",
+      "KEY `IDWork` (`IDPublisher`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "sharing_membre_raccolta",
+    "columns": [
+      {
+        "name": "IdSharingMembreAuthor",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDRaccolta",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IdSharingMembreAuthor`)",
+      "KEY `IDEdition` (`IDRaccolta`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "sharing_membre_serie",
+    "columns": [
+      {
+        "name": "IdSharingMembreSerie",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDSerie",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IdSharingMembreSerie`)",
+      "KEY `IDWork` (`IDSerie`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "sharing_membre_work",
+    "columns": [
+      {
+        "name": "IdSharingMembreWork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDWork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IdSharingMembreWork`)",
+      "KEY `IDWork` (`IDWork`)",
+      "KEY `IDMembre` (`IDMembre`)"
+    ]
+  },
+  {
+    "name": "shelves",
+    "columns": [
+      {
+        "name": "IDShelf",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Shelf",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Location",
+        "type": "varchar(250)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Share",
+        "type": "char(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'f'",
+        "comment": null
+      },
+      {
+        "name": "Date",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "Lunghezza",
+        "type": "int(4)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Width",
+        "type": "int(4)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Heigth",
+        "type": "int(4)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDLibrary",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "ShelfOrdine",
+        "type": "int(10)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembreModifying",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDShelf`)",
+      "KEY `Shelf` (`Shelf`)",
+      "KEY `IDLibrary` (`IDLibrary`)",
+      "FULLTEXT KEY `Location` (`Location`)"
+    ]
+  },
+  {
+    "name": "tags",
+    "columns": [
+      {
+        "name": "IDTag",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Tag",
+        "type": "varchar(250)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLanguage",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDTag`)",
+      "KEY `Tag` (`Tag`)"
+    ]
+  },
+  {
+    "name": "tipiacquisto",
+    "columns": [
+      {
+        "name": "IDtipoAcquisto",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "tipoAcquisto",
+        "type": "varchar(250)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Direction",
+        "type": "varchar(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": "in or out"
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDtipoAcquisto`)",
+      "KEY `Direction` (`Direction`)"
+    ]
+  },
+  {
+    "name": "transactions",
+    "columns": [
+      {
+        "name": "IDTransaction",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDCopy",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDTransactioncase",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CommentTransaction",
+        "type": "varchar(500)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "TransactionDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Filingdate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "Direzione",
+        "type": "int(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDTransaction`)",
+      "KEY `IDCopy` (`IDCopy`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `IDTransactioncase` (`IDTransactioncase`)",
+      "KEY `Esiste` (`Direzione`)"
+    ]
+  },
+  {
+    "name": "utilisateur",
+    "columns": [
+      {
+        "name": "IDUtilisateur",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "Login",
+        "type": "varchar(32)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "MotDePasse",
+        "type": "varchar(32)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Administrateur",
+        "type": "tinyint(4)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "TotalMessage",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "Avatar",
+        "type": "varchar(260)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Email",
+        "type": "varchar(260)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "Signature",
+        "type": "longtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "EnLigne",
+        "type": "tinyint(4)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0'",
+        "comment": null
+      },
+      {
+        "name": "DateCreation",
+        "type": "datetime",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'0000-00-00 00:00:00'",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "UNIQUE KEY `IDUtilisateur` (`IDUtilisateur`)",
+      "UNIQUE KEY `Login` (`Login`)",
+      "KEY `Email` (`Email`(255))",
+      "KEY `EnLigne` (`EnLigne`)",
+      "KEY `DateCreation` (`DateCreation`)"
+    ]
+  },
+  {
+    "name": "work_works",
+    "columns": [
+      {
+        "name": "IDWorkR",
+        "type": "smallint(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDWork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Posizione",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "DataCreazione",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDWorkR`,`IDWork`) USING BTREE",
+      "KEY `IDRaccolta` (`IDWorkR`)",
+      "KEY `IDEdizione` (`IDWork`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `Posizione` (`Posizione`)"
+    ]
+  },
+  {
+    "name": "works",
+    "columns": [
+      {
+        "name": "IDWork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "Tipo",
+        "type": "varchar(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "OriginalTitle",
+        "type": "varchar(255)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "OriginalSubTitle",
+        "type": "varchar(255)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "ACDC",
+        "type": "int(1)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "'1'",
+        "comment": null
+      },
+      {
+        "name": "PublishingYear",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "OriginalLanguage",
+        "type": "int(4)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDForm",
+        "type": "int(2)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDGenre",
+        "type": "int(3)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "WFilingDate",
+        "type": "timestamp",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "CURRENT_TIMESTAMP",
+        "comment": null
+      },
+      {
+        "name": "WFilingUser",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "WorkApproved",
+        "type": "char(1)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "WCreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "WCreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "enWWikilink",
+        "type": "mediumtext",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembreModify",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "sAllAuthors",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "AuthorsIDs",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "AuthorANameSurname",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CoAuthorsIDs",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CoAuthorANameSurname",
+        "type": "text",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDGeneri_stringa",
+        "type": "varchar(255)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDWork`)",
+      "KEY `WDIDX_literaryworks_PublishingYear` (`PublishingYear`)",
+      "KEY `WDIDX_literaryworks_OriginalLanguage` (`OriginalLanguage`)",
+      "KEY `WDIDX_literaryworks_LiteraryForm` (`IDForm`)",
+      "KEY `WDIDX_literaryworks_LiteraryGenre` (`IDGenre`)",
+      "KEY `UserLiterarywork` (`WFilingUser`)",
+      "KEY `IDMembreModify` (`IDMembreModify`)",
+      "KEY `ACDC` (`ACDC`)",
+      "KEY `Tipo` (`Tipo`)",
+      "FULLTEXT KEY `WDIDX_literaryworks_OriginalTitle` (`OriginalTitle`)",
+      "FULLTEXT KEY `enWWikilink` (`enWWikilink`)",
+      "FULLTEXT KEY `AcronimousNameSurname` (`AuthorANameSurname`)",
+      "FULLTEXT KEY `AuthorsIDs` (`AuthorsIDs`)",
+      "FULLTEXT KEY `CoAuthorsIDs` (`CoAuthorsIDs`)",
+      "FULLTEXT KEY `CoAuthorANameSurname` (`CoAuthorANameSurname`)",
+      "FULLTEXT KEY `OriginalSubTitle` (`OriginalSubTitle`)",
+      "FULLTEXT KEY `sAllAuthors` (`sAllAuthors`)"
+    ]
+  },
+  {
+    "name": "works_editions",
+    "columns": [
+      {
+        "name": "IDWork_Edition",
+        "type": "bigint(20)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDEdition",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDWork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDWork_Edition`)",
+      "KEY `WDIDX_literaryworks_editions_Edition` (`IDEdition`)",
+      "KEY `WDIDX_literaryworks_editions_LiteraryWork` (`IDWork`)",
+      "KEY `WDIDX_literaryworks_editions_i1` (`IDEdition`,`IDWork`)",
+      "KEY `WDIDX_literaryworks_editions_LiteraryWork_Edition` (`IDWork`,`IDEdition`)"
+    ]
+  },
+  {
+    "name": "works_links",
+    "columns": [
+      {
+        "name": "IDWork_Link",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDWork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDLink",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDTag",
+        "type": "int(11)",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDWork_Link`)",
+      "UNIQUE KEY `IDAuthorIDMembreLink` (`IDWork`,`IDLink`)",
+      "KEY `IDMembre` (`IDMembre`)",
+      "KEY `IDLink` (`IDLink`)",
+      "KEY `IDAuthor` (`IDWork`)"
+    ]
+  },
+  {
+    "name": "works_tags",
+    "columns": [
+      {
+        "name": "IDWork_Tag",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": true,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDWork",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "IDTag",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "CreationDate",
+        "type": "date",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "CreationTime",
+        "type": "time",
+        "nullable": true,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": "NULL",
+        "comment": null
+      },
+      {
+        "name": "IDMembre",
+        "type": "int(11)",
+        "nullable": false,
+        "auto_increment": false,
+        "unsigned": false,
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      "PRIMARY KEY (`IDWork_Tag`)",
+      "KEY `IDAuthor` (`IDWork`)",
+      "KEY `IDTag` (`IDTag`)"
+    ]
+  }
+]

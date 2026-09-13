@@ -1,0 +1,4 @@
+frontend/.cert/
+backend/.env
+*.env
+!.env.example

@@ -1,0 +1,10 @@
+@echo off
+setlocal
+
+:: Sposta nella directory del frontend
+cd /d C:\Users\radic\Documents\Git\POPOSTAPO_BOOKS\frontend
+
+:: Avvia il dev server Vite con HTTPS (necessario per la fotocamera)
+call npm run dev
+
+pause

@@ -1,0 +1,26 @@
+@echo off
+setlocal
+
+:: Sposta questa finestra nella directory del progetto.
+:: Se copi il file altrove, lascia questo percorso invariato.
+cd /d C:\Users\radic\Documents\Git\POPOSTAPO_BOOKS
+
+:: --- Segreti e credenziali ---
+:: Sostituisci i placeholder con i valori reali prima di usare il file.
+set DATABASE_URL=postgresql+psycopg2://postgres:INSERISCI_PASSWORD_POSTGRES@localhost:5432/popostapo_books
+set JWT_SECRET=INSERISCI_UNA_STRINGA_LUNGA_RANDOM
+set GOOGLE_BOOKS_API_KEY=INSERISCI_CHIAVE_GOOGLE
+set OPENAI_API_KEY=INSERISCI_CHIAVE_OPENAI
+
+:: --- Configurazioni non segrete ---
+set ACCESS_TOKEN_EXPIRES_IN=15m
+set REFRESH_TOKEN_EXPIRES_IN=30d
+set CORS_ORIGIN=http://localhost
+set OPENAI_VISION_MODEL=gpt-4.1-mini
+
+:: Attiva il virtual environment e avvia FastAPI
+:: NOTA: in un .bat serve "call" per eseguire un altro script .bat e tornare qui.
+call backend\.venv\Scripts\activate
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8002 --reload
+
+pause
