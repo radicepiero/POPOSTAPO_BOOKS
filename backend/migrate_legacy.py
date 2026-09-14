@@ -709,6 +709,7 @@ def main():
             vals.append((
                 int(r["IDReading"]),
                 None,  # owner_uuid
+                int(r["IDMembre"]),
                 eid,
                 None,  # copy_id
                 friend_id,
@@ -716,11 +717,13 @@ def main():
                 safe_date(r.get("LastDate")),
                 positive_int(r.get("PageBookmark")) or 0,
                 str(r.get("Finito", "f")).lower() == "v",
+                "finished" if str(r.get("Finito", "f")).lower() == "v" else "active",
+                safe_date(r.get("LastDate")) if str(r.get("Finito", "f")).lower() == "v" else None,
                 float(r["GradimentoMedio"]) if r.get("GradimentoMedio") and float(r.get("GradimentoMedio", 0)) > 0 else None,
                 is_shared(r.get("ShareReading")),
             ))
-        execute_values(cur, """INSERT INTO readings (id, owner_uuid, edition_id, copy_id, friend_id,
-            start_date, end_date, current_page, finished, rating, is_shared) VALUES %s ON CONFLICT DO NOTHING""", vals)
+        execute_values(cur, """INSERT INTO readings (id, owner_uuid, owner_membre_id, edition_id, copy_id, friend_id,
+            start_date, end_date, current_page, finished, status, status_changed_at, rating, is_shared) VALUES %s ON CONFLICT DO NOTHING""", vals)
         cur.execute("SELECT setval('readings_id_seq', (SELECT COALESCE(MAX(id),0) FROM readings))")
     pg.commit()
     print(f"  {len(rows)} readings.")

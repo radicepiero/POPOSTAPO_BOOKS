@@ -33,6 +33,15 @@ function EditionDetail() {
     }
   }
 
+  const addToWishlist = async () => {
+    try {
+      await client.post(`/editions/${editionId}/readings`, { status: 'wishlist' })
+      navigate('/readings?status=wishlist')
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message)
+    }
+  }
+
   const addReading = async (event: React.FormEvent) => {
     event.preventDefault()
     try {
@@ -55,6 +64,22 @@ function EditionDetail() {
   return (
     <div>
       <h2>{edition.title}</h2>
+      {(Object.keys(edition.images || {}).length > 0 || edition.covers?.length > 0) && (
+        <section className="card">
+          <h3>Immagini dell'edizione</h3>
+          <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto' }}>
+            {(Object.keys(edition.images || {}).length > 0
+              ? Object.entries(edition.images).map(([role, url]) => ({ role, url }))
+              : edition.covers.map((url: string, index: number) => ({ role: index === 0 ? 'front cover' : 'image', url })))
+              .map((item: any) => (
+                <figure key={`${item.role}-${item.url}`} style={{ margin: 0, minWidth: '110px' }}>
+                  <img src={item.url} alt={item.role} style={{ width: '110px', height: '150px', objectFit: 'contain', borderRadius: '0.4rem' }} />
+                  <figcaption style={{ fontSize: '0.75rem', color: '#666' }}>{{ 'front cover': 'Copertina', 'back cover': 'Retro', 'copyright or title page': 'Dati editoriali', image: 'Immagine' }[item.role as string] || item.role}</figcaption>
+                </figure>
+              ))}
+          </div>
+        </section>
+      )}
       <section className="card">
         <h3>Opera</h3>
         <p><strong>Titolo originale:</strong> {edition.work_title || 'Non ancora identificata'}</p>
@@ -69,8 +94,9 @@ function EditionDetail() {
         <p><strong>Pagine:</strong> {edition.pages || '—'}</p>
         {edition.contributors?.map((contributor: any, index: number) => <p key={index}><strong>{contributor.role}:</strong> {contributor.name}</p>)}
       </section>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
         <button onClick={() => setAction('reading')}>Registra lettura</button>
+        <button onClick={addToWishlist}>Aggiungi alla wishlist</button>
         <button onClick={() => setAction('copy')}>Aggiungi copia</button>
       </div>
       {action === 'reading' && (

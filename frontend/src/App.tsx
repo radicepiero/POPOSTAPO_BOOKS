@@ -6,6 +6,7 @@ import Propose from './pages/Propose'
 import Confirm from './pages/Confirm'
 import Library from './pages/Library'
 import EditionDetail from './pages/EditionDetail'
+import Readings from './pages/Readings'
 import './index.css'
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
       <nav className="bottom-nav">
         <Link to="/">Home</Link>
         <Link to="/scan">+</Link>
+        <Link to="/readings">Letture</Link>
         <Link to="/library">Libreria</Link>
         <Link to="/login">Login</Link>
       </nav>
@@ -25,6 +27,7 @@ function App() {
           <Route path="/propose/:jobId" element={<Propose />} />
           <Route path="/confirm/:jobId" element={<Confirm />} />
           <Route path="/editions/:editionId" element={<EditionDetail />} />
+          <Route path="/readings" element={<Readings />} />
           <Route path="/library" element={<Library />} />
         </Routes>
       </main>

@@ -1,9 +1,11 @@
+import logging
 import pathlib
 import uuid as uuid_module
 from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 import requests
@@ -11,7 +13,7 @@ import requests
 from ..auth import get_current_user_uuid
 from ..config import settings
 from ..database import get_db
-from ..models import Copy, CopyEnrichmentJob, Edition, Reading
+from ..models import Copy, CopyEnrichmentJob, Edition, Membre, Reading
 from ..schemas import CandidateConfirm, CopyConfirm, CopyDraftCreate, EditionActionCreate, EditionConfirmResponse, EditionSearchResponse, EnrichmentJobResponse, ReadingCreate
 from ..services.confirmation import confirm_edition_from_candidate, confirm_edition_from_job
 from ..services.enrichment import (
@@ -25,6 +27,7 @@ from ..services.enrichment import (
 from ..services.openai_vision import analyze_cover
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/editions", tags=["editions"])
 UPLOAD_DIR = pathlib.Path(__file__).resolve().parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -71,7 +74,7 @@ def search_cover(
     """Analyze available book images using OpenAI Vision and return extracted metadata."""
     uploaded = {"front cover": image, "back cover": back_image, "copyright or title page": copyright_page}
     image_paths = {}
-    image_urls = []
+    image_urls = {}
     for role, upload in uploaded.items():
         if upload is None:
             continue
@@ -80,7 +83,7 @@ def search_cover(
         with file_path.open("wb") as target:
             target.write(upload.file.read())
         image_paths[role] = str(file_path)
-        image_urls.append(f"/uploads/{file_path.name}")
+        image_urls[role] = f"/uploads/{file_path.name}"
 
     result = analyze_cover(image_paths)
 
@@ -101,7 +104,8 @@ def search_cover(
         "language": result.get("language"),
         "series": result.get("series"),
         "pages": result.get("pages"),
-        "covers": image_urls,
+        "covers": list(image_urls.values()),
+        "images": image_urls,
     }
 
 
@@ -184,8 +188,16 @@ def confirm_candidate(
     db: Session = Depends(get_db),
     owner_uuid: str = Depends(get_current_user_uuid),
 ):
-    edition = confirm_edition_from_candidate(data.model_dump(exclude_none=True), db)
-    return {"edition_id": edition.id, "status": edition.status}
+    try:
+        edition = confirm_edition_from_candidate(data.model_dump(exclude_none=True), db)
+        return {"edition_id": edition.id, "status": edition.status}
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except SQLAlchemyError as exc:
+        db.rollback()
+        logger.exception("Unable to confirm edition candidate")
+        raise HTTPException(status_code=500, detail="Impossibile salvare l'edizione: dati non compatibili con il catalogo.") from exc
 
 
 @router.get("/enrichment/{job_id}", response_model=EnrichmentJobResponse)
@@ -248,7 +260,16 @@ def add_reading(edition_id: int, data: ReadingCreate, db: Session = Depends(get_
         copy = db.query(Copy).filter_by(id=data.copy_id, owner_uuid=owner, edition_id=edition_id).first()
         if not copy:
             raise HTTPException(status_code=400, detail="Copy does not belong to this user and edition")
-    reading = Reading(owner_uuid=owner, edition_id=edition_id, copy_id=data.copy_id, start_date=data.start_date, end_date=data.end_date, current_page=data.current_page, finished=data.finished, rating=data.rating)
+    membre = db.query(Membre).filter_by(uuid=owner).first()
+    status = "finished" if data.finished else data.status
+    if status == "wishlist":
+        owner_filter = Reading.owner_uuid == owner
+        if membre:
+            owner_filter = owner_filter | (Reading.owner_membre_id == membre.id)
+        existing = db.query(Reading).filter(Reading.edition_id == edition_id, Reading.status == "wishlist").filter(owner_filter).first()
+        if existing:
+            return {"reading_id": existing.id, "edition_id": edition_id, "status": "wishlist"}
+    reading = Reading(owner_uuid=owner, owner_membre_id=membre.id if membre else None, edition_id=edition_id, copy_id=data.copy_id, start_date=data.start_date, end_date=data.end_date, current_page=data.current_page, finished=status == "finished", status=status, rating=data.rating)
     db.add(reading)
     db.commit()
     db.refresh(reading)

@@ -483,6 +483,7 @@ class Reading(Base):
     __tablename__ = "readings"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     owner_uuid: Mapped[Optional[_uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    owner_membre_id: Mapped[Optional[int]] = mapped_column(ForeignKey("membres.id"), nullable=True)
     edition_id: Mapped[int] = mapped_column(ForeignKey("editions.id"))
     copy_id: Mapped[Optional[int]] = mapped_column(ForeignKey("copies.id"), nullable=True)
     friend_id: Mapped[Optional[int]] = mapped_column(ForeignKey("friends.id"), nullable=True)
@@ -490,6 +491,8 @@ class Reading(Base):
     end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     current_page: Mapped[int] = mapped_column(Integer, default=0)
     finished: Mapped[bool] = mapped_column(Boolean, default=False)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    status_changed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     rating: Mapped[Optional[Decimal]] = mapped_column(Numeric(4, 2), nullable=True)
     is_shared: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

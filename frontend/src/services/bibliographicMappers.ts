@@ -40,6 +40,7 @@ export interface Candidate {
 
   series?: string[]
   covers?: string[]
+  images?: Record<string, string>
   thumbnail?: string
   preview_url?: string
   info_url?: string
@@ -51,6 +52,7 @@ export interface Candidate {
 
   dimensions?: { height?: string; width?: string; thickness?: string }
   weight?: string
+  warnings?: string[]
 
   raw?: any
 }
@@ -206,12 +208,27 @@ export function mapGoogleBooksResponse(data: any): Candidate[] {
       covers,
       thumbnail,
       preview_url: normalizeCoverUrl(volumeInfo?.previewLink),
-      info_url: normalizeCoverUrl(volumeInfo?.infoLink),
+      info_url: normalizeCoverUrl(volumeInfo?.canonicalVolumeLink || volumeInfo?.infoLink),
       average_rating: toNumber(volumeInfo?.averageRating),
       ratings_count: toNumber(volumeInfo?.ratingsCount),
       dimensions: volumeInfo?.dimensions,
       raw: item,
     })
+  }
+  const titlesByIsbn = new Map<string, Set<string>>()
+  for (const candidate of candidates) {
+    const identifier = candidate.isbn13 || candidate.isbn10
+    const title = candidate.title?.trim().toLocaleLowerCase()
+    if (!identifier || !title) continue
+    const titles = titlesByIsbn.get(identifier) || new Set<string>()
+    titles.add(title)
+    titlesByIsbn.set(identifier, titles)
+  }
+  for (const candidate of candidates) {
+    const identifier = candidate.isbn13 || candidate.isbn10
+    if (identifier && (titlesByIsbn.get(identifier)?.size || 0) > 1) {
+      candidate.warnings = ['Google Books associa questo ISBN a titoli diversi: verifica il libro prima di selezionarlo.']
+    }
   }
   return candidates.slice(0, 10)
 }
@@ -250,6 +267,7 @@ export function mapOpenAIVisionResponse(data: any): Candidate {
     series: data?.series ? [String(data.series)] : undefined,
     pages: toNumber(data?.pages),
     covers: ensureStringArray(data?.covers),
+    images: data?.images || undefined,
     raw: data,
   }
 }

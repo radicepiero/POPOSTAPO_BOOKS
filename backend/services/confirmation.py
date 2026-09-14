@@ -65,6 +65,10 @@ def split_name(full_name: str):
     return " ".join(parts[:-1]), parts[-1]
 
 
+def normalize_source(source: str) -> str:
+    return {"openai_vision": "openai"}.get(source, source)
+
+
 def find_or_create_author(full_name: str, source: str, db: Session) -> Author:
     given, family = split_name(full_name)
     author = db.query(Author).filter(
@@ -250,7 +254,7 @@ def confirm_edition_from_candidate(candidate: dict, db: Session) -> Edition:
     title = candidate.get("title")
     if not title:
         raise ValueError("Edition title missing")
-    source = candidate.get("source") or "manual"
+    source = normalize_source(candidate.get("source") or "manual")
     publisher_name = candidate.get("publisher")
     publisher = find_or_create_publisher(publisher_name, source, db)
     isbn = candidate.get("isbn")
@@ -302,7 +306,7 @@ def confirm_edition_from_job(
     title = edition_data.get("title")
     if not title:
         raise ValueError("Edition title missing")
-    source = edition_data.get("source") or "manual"
+    source = normalize_source(edition_data.get("source") or "manual")
     publishers = edition_data.get("publishers") or []
     publisher_name = edition_data.get("publisher") or (publishers[0] if publishers else None)
     publisher = find_or_create_publisher(publisher_name, source, db)
@@ -357,7 +361,7 @@ def confirm_copy_from_job(
             edition_data = {**(job.result.get("proposed_edition") or {})}
             work_data = {**(job.result.get("proposed_work") or {})}
 
-    source = edition_data.get("source") or "manual"
+    source = normalize_source(edition_data.get("source") or "manual")
     if manual_data:
         edition_data.update({key: value for key, value in manual_data.items() if value is not None})
         work_data.update({

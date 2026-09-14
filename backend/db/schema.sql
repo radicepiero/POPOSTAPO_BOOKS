@@ -458,6 +458,7 @@ CREATE TABLE borrows (
 CREATE TABLE readings (
   id SERIAL PRIMARY KEY,
   owner_uuid UUID,
+  owner_membre_id INT REFERENCES membres(id),
   edition_id INT NOT NULL REFERENCES editions(id),
   copy_id INT REFERENCES copies(id),
   friend_id INT REFERENCES friends(id),  -- who recommended
@@ -465,6 +466,8 @@ CREATE TABLE readings (
   end_date DATE,
   current_page INT NOT NULL DEFAULT 0,
   finished BOOLEAN NOT NULL DEFAULT false,
+  status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'wishlist', 'finished', 'abandoned')),
+  status_changed_at TIMESTAMPTZ,
   rating DECIMAL(4,2),
   is_shared BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -676,6 +679,7 @@ CREATE INDEX IF NOT EXISTS idx_authors_given_name ON authors (given_name);
 CREATE INDEX IF NOT EXISTS idx_works_title ON works (original_title);
 CREATE INDEX IF NOT EXISTS idx_copies_owner ON copies (owner_uuid);
 CREATE INDEX IF NOT EXISTS idx_readings_owner ON readings (owner_uuid);
+CREATE INDEX IF NOT EXISTS idx_readings_owner_membre ON readings (owner_membre_id);
 CREATE INDEX IF NOT EXISTS idx_readings_edition ON readings (edition_id);
 
 -- ============================================================

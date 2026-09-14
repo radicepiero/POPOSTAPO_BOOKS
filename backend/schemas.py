@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 from pydantic import BaseModel
 
 
@@ -99,6 +99,7 @@ class CandidateConfirm(BaseModel):
 
     series: Optional[list[str]] = None
     covers: Optional[list[str]] = None
+    images: Optional[dict[str, str]] = None
     thumbnail: Optional[str] = None
     preview_url: Optional[str] = None
     info_url: Optional[str] = None
@@ -129,7 +130,12 @@ class ReadingCreate(BaseModel):
     end_date: Optional[date] = None
     current_page: int = 0
     finished: bool = False
+    status: Literal["active", "wishlist", "finished"] = "active"
     rating: Optional[Decimal] = None
+
+
+class ReadingStatusUpdate(BaseModel):
+    status: Literal["active", "wishlist", "finished", "abandoned"]
 
 
 class CopyListItem(BaseModel):

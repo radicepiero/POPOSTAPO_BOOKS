@@ -180,6 +180,7 @@ def _local_edition_to_dict(edition: Edition, db) -> dict:
         "language": language_code,
         "languages": languages,
         "covers": covers,
+        "images": source_data.get("images") or {},
         "thumbnail": thumbnail,
         "isbn": edition.isbn13 or edition.isbn10,
         "average_rating": source_data.get("average_rating"),

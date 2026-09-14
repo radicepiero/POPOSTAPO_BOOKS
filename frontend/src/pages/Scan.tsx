@@ -24,6 +24,19 @@ const sourceLabels: Record<string, string> = {
   openai_vision: 'Foto copertina',
 }
 
+function isbn10To13(isbn10: string): string | undefined {
+  const clean = isbn10.replace(/[-\s]/g, '').toUpperCase()
+  if (!/^\d{9}[\dX]$/.test(clean)) return undefined
+  const base = `978${clean.slice(0, 9)}`
+  const sum = base.split('').reduce((total, digit, index) => total + Number(digit) * (index % 2 === 0 ? 1 : 3), 0)
+  return `${base}${(10 - sum % 10) % 10}`
+}
+
+function canonicalIsbn(value: string): string {
+  const clean = value.replace(/[-\s]/g, '').toUpperCase()
+  return clean.length === 10 ? isbn10To13(clean) || clean : clean
+}
+
 function candidateScore(c: Candidate): number {
   let score = 0
   if (c.source === 'postgresql') score += 10
@@ -46,6 +59,12 @@ function CandidateCard({ candidate, onSelect }: { candidate: Candidate; onSelect
 
   if (candidate.isbn13) details.push({ label: 'ISBN-13', value: candidate.isbn13 })
   if (candidate.isbn10) details.push({ label: 'ISBN-10', value: candidate.isbn10 })
+  if (candidate.isbn10 && candidate.isbn13) {
+    details.push({
+      label: 'Coerenza ISBN',
+      value: isbn10To13(candidate.isbn10) === candidate.isbn13 ? 'ISBN-10 e ISBN-13 equivalenti' : 'Identificativi non equivalenti',
+    })
+  }
   if (candidate.physical_format) details.push({ label: 'Formato', value: candidate.physical_format })
   if (candidate.edition_name?.length) details.push({ label: 'Edizione', value: candidate.edition_name.join(', ') })
   if (candidate.series?.length) details.push({ label: 'Collana', value: candidate.series.join(', ') })
@@ -79,6 +98,9 @@ function CandidateCard({ candidate, onSelect }: { candidate: Candidate; onSelect
         </p>
         <p>ISBN: {candidate.isbn || '—'}{candidate.pages ? ` — ${candidate.pages} pp.` : ''}</p>
         <p style={{ fontSize: '0.75rem', color: '#888', margin: '0.25rem 0 0' }}>{sourceLabel}</p>
+        {candidate.warnings?.map((warning) => (
+          <p key={warning} style={{ background: '#fff3cd', color: '#765c00', padding: '0.5rem', borderRadius: '0.35rem', fontSize: '0.8rem' }}>{warning}</p>
+        ))}
         <div style={{ clear: 'both' }} />
       </div>
       {details.length > 0 && (
@@ -214,20 +236,20 @@ function Scan() {
     const seenIsbns = new Set<string>()
     const seenKeys = new Set<string>()
     for (const c of existing) {
-      if (c.isbn13) seenIsbns.add(c.isbn13)
-      if (c.isbn10) seenIsbns.add(c.isbn10)
-      if (c.isbn) seenIsbns.add(c.isbn)
+      if (c.isbn13) seenIsbns.add(canonicalIsbn(c.isbn13))
+      if (c.isbn10) seenIsbns.add(canonicalIsbn(c.isbn10))
+      if (c.isbn) seenIsbns.add(canonicalIsbn(c.isbn))
       seenKeys.add(candidateKey(c))
     }
     return incoming.filter((c) => {
-      if (c.isbn13 && seenIsbns.has(c.isbn13)) return false
-      if (c.isbn10 && seenIsbns.has(c.isbn10)) return false
-      if (c.isbn && seenIsbns.has(c.isbn)) return false
+      if (c.isbn13 && seenIsbns.has(canonicalIsbn(c.isbn13))) return false
+      if (c.isbn10 && seenIsbns.has(canonicalIsbn(c.isbn10))) return false
+      if (c.isbn && seenIsbns.has(canonicalIsbn(c.isbn))) return false
       const key = candidateKey(c)
       if (seenKeys.has(key)) return false
-      if (c.isbn13) seenIsbns.add(c.isbn13)
-      if (c.isbn10) seenIsbns.add(c.isbn10)
-      if (c.isbn) seenIsbns.add(c.isbn)
+      if (c.isbn13) seenIsbns.add(canonicalIsbn(c.isbn13))
+      if (c.isbn10) seenIsbns.add(canonicalIsbn(c.isbn10))
+      if (c.isbn) seenIsbns.add(canonicalIsbn(c.isbn))
       seenKeys.add(key)
       return true
     })
@@ -246,11 +268,11 @@ function Scan() {
     const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
     if (criteria.isbn) {
-      const ci = criteria.isbn.replace(/[\s-]/g, '').toUpperCase()
+      const ci = canonicalIsbn(criteria.isbn)
       const candidateIsbns = [c.isbn, c.isbn13, c.isbn10]
         .filter(Boolean)
-        .map((s) => s!.replace(/[\s-]/g, '').toUpperCase())
-      if (!candidateIsbns.some((i) => i.includes(ci) || ci.includes(i))) return false
+        .map((s) => canonicalIsbn(s!))
+      if (!candidateIsbns.some((i) => i === ci)) return false
     }
 
     if (criteria.title) {
@@ -294,9 +316,15 @@ function Scan() {
     }
 
     const filterAndAdd = (incoming: Candidate[]) => {
-      const filtered = isAdvanced
+      let filtered = isAdvanced
         ? incoming.filter((c) => matchesAdvancedCriteria(c, searchQuery))
         : incoming
+      if (isRealIsbn) {
+        const requestedIsbn = canonicalIsbn(isbnField)
+        filtered = filtered.filter((candidate) => [candidate.isbn, candidate.isbn10, candidate.isbn13]
+          .filter(Boolean)
+          .some((value) => canonicalIsbn(value!) === requestedIsbn))
+      }
       setResults((prev) => [...prev, ...dedup(prev, filtered)])
     }
 
@@ -545,8 +573,7 @@ function Scan() {
               <button type="button" onClick={() => setScanning(true)} aria-label="Scansiona codice a barre" title="Scansiona codice a barre" style={{ padding: '0.65rem 0.8rem' }}>Scanner</button>
               <button type="submit" disabled={searching} style={{ padding: '0.65rem 0.9rem' }}>{searching ? '...' : 'Cerca'}</button>
             </div>
-            <button type="button" onClick={() => setShowCamera(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#1769aa', textDecoration: 'underline' }}>Non ho ISBN</button>
-            <button type="button" onClick={() => setShowAdvanced(true)} style={{ display: 'block', marginTop: '0.65rem', padding: 0, background: 'transparent', color: '#555', fontSize: '0.85rem' }}>Ricerca per titolo o autore</button>
+            <button type="button" onClick={() => setShowAdvanced(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#555', fontSize: '0.85rem' }}>Ricerca per titolo o autore</button>
           </>
         )}
 
@@ -558,6 +585,7 @@ function Scan() {
             <label>Titolo<input type="text" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
             <label>Autore<input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} /></label>
             <button type="submit" disabled={searching} style={{ width: '100%' }}>{searching ? 'Ricerca in corso...' : 'Cerca'}</button>
+            <button type="button" onClick={() => setShowCamera(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#1769aa', textDecoration: 'underline' }}>Cerca per immagini</button>
           </div>
         )}
 
