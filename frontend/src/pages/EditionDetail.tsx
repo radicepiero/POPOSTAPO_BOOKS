@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import client from '../api/client'
+import CopyFormModal from '../components/CopyFormModal'
 
 function EditionDetail() {
   const { editionId } = useParams<{ editionId: string }>()
@@ -8,8 +9,6 @@ function EditionDetail() {
   const [edition, setEdition] = useState<any>(null)
   const [action, setAction] = useState<'copy' | 'reading' | null>(null)
   const [date, setDate] = useState('')
-  const [price, setPrice] = useState('')
-  const [note, setNote] = useState('')
   const [currentPage, setCurrentPage] = useState('0')
   const [finished, setFinished] = useState(false)
   const [rating, setRating] = useState('')
@@ -18,20 +17,6 @@ function EditionDetail() {
   useEffect(() => {
     client.get(`/editions/${editionId}`).then(({ data }) => setEdition(data)).catch((err) => setError(err.response?.data?.detail || err.message))
   }, [editionId])
-
-  const addCopy = async (event: React.FormEvent) => {
-    event.preventDefault()
-    try {
-      await client.post(`/editions/${editionId}/copies`, {
-        acquisition_date: date || undefined,
-        price: price ? Number(price) : undefined,
-        condition_note: note || undefined,
-      })
-      navigate('/library')
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message)
-    }
-  }
 
   const addToWishlist = async () => {
     try {
@@ -66,7 +51,7 @@ function EditionDetail() {
       <h2>{edition.title}</h2>
       {(Object.keys(edition.images || {}).length > 0 || edition.covers?.length > 0) && (
         <section className="card">
-          <h3>Immagini dell'edizione</h3>
+          <h3>Immagini dell&apos;edizione</h3>
           <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto' }}>
             {(Object.keys(edition.images || {}).length > 0
               ? Object.entries(edition.images).map(([role, url]) => ({ role, url }))
@@ -74,7 +59,7 @@ function EditionDetail() {
               .map((item: any) => (
                 <figure key={`${item.role}-${item.url}`} style={{ margin: 0, minWidth: '110px' }}>
                   <img src={item.url} alt={item.role} style={{ width: '110px', height: '150px', objectFit: 'contain', borderRadius: '0.4rem' }} />
-                  <figcaption style={{ fontSize: '0.75rem', color: '#666' }}>{{ 'front cover': 'Copertina', 'back cover': 'Retro', 'copyright or title page': 'Dati editoriali', image: 'Immagine' }[item.role as string] || item.role}</figcaption>
+                  <figcaption style={{ fontSize: '0.75rem', color: '#666' }}>{{ 'front cover': 'Copertina', 'back cover': 'Retro', 'copyright or title page': 'Dati editoriali', spine: 'Spina', image: 'Immagine' }[item.role as string] || item.role}</figcaption>
                 </figure>
               ))}
           </div>
@@ -110,13 +95,11 @@ function EditionDetail() {
         </form>
       )}
       {action === 'copy' && (
-        <form className="card" onSubmit={addCopy}>
-          <h3>Copia</h3>
-          <label>Data di acquisto<input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>
-          <label>Prezzo<input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} /></label>
-          <label>Condizioni e note<textarea maxLength={255} value={note} onChange={(event) => setNote(event.target.value)} /></label>
-          <button type="submit">Aggiungi alla libreria</button>
-        </form>
+        <CopyFormModal
+          editionId={Number(editionId)}
+          onClose={() => setAction(null)}
+          onSaved={() => navigate('/library')}
+        />
       )}
       {error && <div className="error">{error}</div>}
     </div>

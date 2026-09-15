@@ -120,8 +120,21 @@ class EditionConfirmResponse(BaseModel):
 
 class EditionActionCreate(BaseModel):
     acquisition_date: Optional[date] = None
+    acquisition_type_id: Optional[int] = None
+    shelf_id: Optional[int] = None
+    currency: Optional[str] = None
     price: Optional[Decimal] = None
     condition_note: Optional[str] = None
+
+
+class CopyUpdate(BaseModel):
+    acquisition_date: Optional[date] = None
+    acquisition_type_id: Optional[int] = None
+    shelf_id: Optional[int] = None
+    currency: Optional[str] = None
+    price: Optional[Decimal] = None
+    condition_note: Optional[str] = None
+    status: Optional[str] = None
 
 
 class ReadingCreate(BaseModel):
@@ -144,3 +157,13 @@ class CopyListItem(BaseModel):
     status: str
     title: str | None
     author: str | None
+    covers: list[str] | None = None
+    publisher: str | None = None
+    pages: int | None = None
+    acquisition_date: date | None = None
+    acquisition_type_name: str | None = None
+    shelf_name: str | None = None
+    library_name: str | None = None
+    condition_note: str | None = None
+    reading_status: str | None = None
+    reading_id: int | None = None

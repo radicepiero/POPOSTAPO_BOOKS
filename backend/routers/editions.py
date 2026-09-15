@@ -69,10 +69,11 @@ def search_cover(
     image: UploadFile = File(...),
     back_image: Optional[UploadFile] = File(None),
     copyright_page: Optional[UploadFile] = File(None),
+    spine_image: Optional[UploadFile] = File(None),
     owner_uuid: str = Depends(get_current_user_uuid),
 ):
     """Analyze available book images using OpenAI Vision and return extracted metadata."""
-    uploaded = {"front cover": image, "back cover": back_image, "copyright or title page": copyright_page}
+    uploaded = {"front cover": image, "back cover": back_image, "copyright or title page": copyright_page, "spine": spine_image}
     image_paths = {}
     image_urls = {}
     for role, upload in uploaded.items():
@@ -244,7 +245,18 @@ def get_edition(edition_id: int, db: Session = Depends(get_db), owner_uuid: str 
 def add_copy(edition_id: int, data: EditionActionCreate, db: Session = Depends(get_db), owner_uuid: str = Depends(get_current_user_uuid)):
     if not db.query(Edition).filter_by(id=edition_id).first():
         raise HTTPException(status_code=404, detail="Edition not found")
-    copy = Copy(owner_uuid=uuid_module.UUID(owner_uuid), edition_id=edition_id, acquisition_date=data.acquisition_date, price=data.price, condition_note=data.condition_note, status="approved", source="manual")
+    copy = Copy(
+        owner_uuid=uuid_module.UUID(owner_uuid),
+        edition_id=edition_id,
+        acquisition_date=data.acquisition_date,
+        acquisition_type_id=data.acquisition_type_id,
+        shelf_id=data.shelf_id,
+        currency=data.currency,
+        price=data.price,
+        condition_note=data.condition_note,
+        status="approved",
+        source="manual",
+    )
     db.add(copy)
     db.commit()
     db.refresh(copy)

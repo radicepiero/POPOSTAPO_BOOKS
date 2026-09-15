@@ -105,8 +105,12 @@ function Propose() {
             <p><strong>Fonte:</strong> {candidate.source || 'sconosciuta'}</p>
             {candidate.external_id && <p><strong>ID fonte:</strong> {candidate.external_id}</p>}
           </section>
-          <button onClick={() => navigate(`/confirm/${jobId}?index=${index}`)}>
-            Scegli questa edizione
+          <button
+            type="button"
+            onClick={() => navigate(`/confirm/${jobId}?index=${index}`)}
+            style={{ width: '100%', marginTop: '0.75rem' }}
+          >
+            Usa questa edizione
           </button>
         </div>
       ))}

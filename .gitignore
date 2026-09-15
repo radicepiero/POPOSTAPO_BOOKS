@@ -1,4 +1,6 @@
 frontend/.cert/
+frontend/dev-dist/
+node_modules/
 backend/.env
 *.env
 !.env.example

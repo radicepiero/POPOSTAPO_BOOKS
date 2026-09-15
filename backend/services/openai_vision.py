@@ -11,7 +11,9 @@ from ..config import settings
 
 logger = logging.getLogger(__name__)
 
-COVER_PROMPT = """Analyze this book cover image and extract only metadata clearly visible on it.
+COVER_PROMPT = """Analyze these book images and extract only metadata clearly visible across them.
+Images are provided with roles: "front cover", "back cover", "copyright or title page", and "spine".
+Use all images together, but do not infer bibliographic facts that are not visible.
 Return a JSON object with exactly these fields, using null for missing scalar values:
 {
   "title": "book title",
@@ -26,7 +28,7 @@ Return a JSON object with exactly these fields, using null for missing scalar va
   "series": "series or collection name if visible",
   "pages": null
 }
-Do not infer bibliographic facts that are not visible. Return only JSON."""
+Return only JSON."""
 
 
 def analyze_cover(image_paths: dict[str, str]) -> dict:

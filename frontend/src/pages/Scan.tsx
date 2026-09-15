@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import client from '../api/client'
 import BarcodeScanner from '../components/BarcodeScanner'
 import BookCameraCapture from '../components/BookCameraCapture'
+import ImageCropper from '../components/ImageCropper'
 import {
   Candidate,
   mapGoogleBooksResponse,
   mapOpenLibrarySearchResponse,
   mapOpenAIVisionResponse,
 } from '../services/bibliographicMappers'
+
+type ImageKind = 'front' | 'back' | 'copyright' | 'spine'
 
 const sourceColors: Record<string, string> = {
   postgresql: '#e8f5e9',
@@ -78,10 +81,7 @@ function CandidateCard({ candidate, onSelect }: { candidate: Candidate; onSelect
 
   return (
     <div className="card" style={{ marginBottom: '0.75rem', backgroundColor: bgColor }}>
-      <div
-        onClick={() => onSelect(candidate)}
-        style={{ cursor: 'pointer' }}
-      >
+      <div>
         {candidate.covers?.[0] && (
           <img
             src={candidate.covers[0]}
@@ -131,6 +131,11 @@ function CandidateCard({ candidate, onSelect }: { candidate: Candidate; onSelect
           )}
         </>
       )}
+      <div style={{ marginTop: '0.75rem' }}>
+        <button type="button" onClick={() => onSelect(candidate)} style={{ width: '100%' }}>
+          Usa questa edizione
+        </button>
+      </div>
     </div>
   )
 }
@@ -171,11 +176,14 @@ function Scan() {
   const [image, setImage] = useState<File | null>(null)
   const [backImage, setBackImage] = useState<File | null>(null)
   const [copyrightPage, setCopyrightPage] = useState<File | null>(null)
+  const [spineImage, setSpineImage] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [backPreview, setBackPreview] = useState<string | null>(null)
   const [copyrightPreview, setCopyrightPreview] = useState<string | null>(null)
+  const [spinePreview, setSpinePreview] = useState<string | null>(null)
   const [scanning, setScanning] = useState(false)
-  const [capturing, setCapturing] = useState<'front' | 'back' | 'copyright' | null>(null)
+  const [capturing, setCapturing] = useState<ImageKind | null>(null)
+  const [cropImage, setCropImage] = useState<{ kind: ImageKind; src: string } | null>(null)
   const [searching, setSearching] = useState(false)
   const [pendingSources, setPendingSources] = useState<Set<string>>(new Set())
   const [results, setResults] = useState<Candidate[]>([])
@@ -184,32 +192,60 @@ function Scan() {
   const [editing, setEditing] = useState<EditForm | null>(null)
   const navigate = useNavigate()
   const abortControllerRef = useRef<AbortController | null>(null)
+  const pendingFileRef = useRef<{ kind: ImageKind; file: File } | null>(null)
+
+  const setImageForKind = (kind: ImageKind, file: File) => {
+    const url = URL.createObjectURL(file)
+    if (kind === 'front') {
+      setImage(file)
+      setPreview(url)
+    } else if (kind === 'back') {
+      setBackImage(file)
+      setBackPreview(url)
+    } else if (kind === 'copyright') {
+      setCopyrightPage(file)
+      setCopyrightPreview(url)
+    } else if (kind === 'spine') {
+      setSpineImage(file)
+      setSpinePreview(url)
+    }
+  }
+
+  const openCropper = (kind: ImageKind, file: File) => {
+    pendingFileRef.current = { kind, file }
+    setCropImage({ kind, src: URL.createObjectURL(file) })
+  }
+
+  const handleCropDone = (file: File) => {
+    if (!cropImage) return
+    setImageForKind(cropImage.kind, file)
+    setCropImage(null)
+    pendingFileRef.current = null
+  }
+
+  const handleCropCancel = () => {
+    if (!cropImage) return
+    const pending = pendingFileRef.current
+    if (pending && pending.kind === cropImage.kind) {
+      setImageForKind(pending.kind, pending.file)
+    }
+    setCropImage(null)
+    pendingFileRef.current = null
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setImage(file)
-    setPreview(URL.createObjectURL(file))
+    openCropper('front', file)
   }
 
-  const handleOptionalFile = (kind: 'back' | 'copyright', file?: File) => {
+  const handleOptionalFile = (kind: Exclude<ImageKind, 'front'>, file?: File) => {
     if (!file) return
-    if (kind === 'back') {
-      setBackImage(file)
-      setBackPreview(URL.createObjectURL(file))
-    } else {
-      setCopyrightPage(file)
-      setCopyrightPreview(URL.createObjectURL(file))
-    }
+    openCropper(kind, file)
   }
 
   const handleCameraCapture = (file: File) => {
-    if (capturing === 'back') handleOptionalFile('back', file)
-    else if (capturing === 'copyright') handleOptionalFile('copyright', file)
-    else {
-      setImage(file)
-      setPreview(URL.createObjectURL(file))
-    }
+    setImageForKind(capturing || 'front', file)
     setCapturing(null)
   }
 
@@ -443,6 +479,7 @@ function Scan() {
       form.append('image', image)
       if (backImage) form.append('back_image', backImage)
       if (copyrightPage) form.append('copyright_page', copyrightPage)
+      if (spineImage) form.append('spine_image', spineImage)
       const resp = await client.post('/editions/search/cover', form)
       const data = resp.data
 
@@ -597,6 +634,7 @@ function Scan() {
             {[
               { kind: 'front' as const, label: 'Foto copertina', required: true, file: image, preview },
               { kind: 'back' as const, label: 'Foto retro', required: false, file: backImage, preview: backPreview },
+              { kind: 'spine' as const, label: 'Foto fianco/spina', required: false, file: spineImage, preview: spinePreview },
               { kind: 'copyright' as const, label: 'Foto dati editoriali', required: false, file: copyrightPage, preview: copyrightPreview },
             ].map((item) => (
               <div key={item.kind} style={{ borderTop: '1px solid #ddd', padding: '0.9rem 0' }}>
@@ -605,7 +643,31 @@ function Scan() {
                   <button type="button" onClick={() => setCapturing(item.kind)} style={{ flex: 1 }}>Scatta</button>
                   <label style={{ flex: 1, margin: 0 }}>Carica<input type="file" accept="image/*" onChange={(e) => item.kind === 'front' ? handleFileChange(e) : handleOptionalFile(item.kind, e.target.files?.[0])} /></label>
                 </div>
-                {!item.required && !item.file && <button type="button" onClick={() => setNotice(item.kind === 'back' ? 'Procedi senza foto del retro.' : 'Procedi senza pagina interna.')} style={{ marginTop: '0.5rem', padding: 0, background: 'transparent', color: '#555', textDecoration: 'underline' }}>{item.kind === 'back' ? 'Non ho la foto del retro' : 'Non ho la pagina interna'}</button>}
+                {!item.required && !item.file && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const messages: Record<typeof item.kind, string> = {
+                        back: 'Procedi senza foto del retro.',
+                        spine: 'Procedi senza foto del fianco.',
+                        copyright: 'Procedi senza pagina interna.',
+                        front: '',
+                      }
+                      setNotice(messages[item.kind])
+                    }}
+                    style={{ marginTop: '0.5rem', padding: 0, background: 'transparent', color: '#555', textDecoration: 'underline' }}
+                  >
+                    {(() => {
+                      const labels: Record<typeof item.kind, string> = {
+                        back: 'Non ho la foto del retro',
+                        spine: 'Non ho la foto del fianco',
+                        copyright: 'Non ho la pagina interna',
+                        front: '',
+                      }
+                      return labels[item.kind]
+                    })()}
+                  </button>
+                )}
                 {item.preview && <img src={item.preview} alt={item.label} style={{ display: 'block', maxWidth: '100%', maxHeight: '160px', marginTop: '0.6rem', borderRadius: '0.5rem' }} />}
               </div>
             ))}
@@ -693,6 +755,13 @@ function Scan() {
         </div>
       )}
 
+      {cropImage && (
+        <ImageCropper
+          imageSrc={cropImage.src}
+          onCropDone={handleCropDone}
+          onCancel={handleCropCancel}
+        />
+      )}
       {scanning && <BarcodeScanner onScan={handleScan} onClose={() => setScanning(false)} />}
       {capturing && <BookCameraCapture onCapture={handleCameraCapture} onClose={() => setCapturing(null)} />}
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ImageCropper from './ImageCropper'
 
 interface Props {
   onCapture: (file: File) => void
@@ -13,6 +14,7 @@ export default function BookCameraCapture({ onCapture, onClose }: Props) {
   const [captured, setCaptured] = useState<string | null>(null)
   const [capturedFile, setCapturedFile] = useState<File | null>(null)
   const [capturing, setCapturing] = useState(false)
+  const [cropping, setCropping] = useState(false)
 
   const startCamera = async () => {
     try {
@@ -89,6 +91,20 @@ export default function BookCameraCapture({ onCapture, onClose }: Props) {
     if (capturedFile) onCapture(capturedFile)
   }
 
+  const handleCropDone = (file: File) => {
+    onCapture(file)
+  }
+
+  if (cropping && captured) {
+    return (
+      <ImageCropper
+        imageSrc={captured}
+        onCropDone={handleCropDone}
+        onCancel={() => setCropping(false)}
+      />
+    )
+  }
+
   return (
     <div
       style={{
@@ -121,6 +137,7 @@ export default function BookCameraCapture({ onCapture, onClose }: Props) {
         {captured ? (
           <>
             <button type="button" onClick={retake}>Riprova</button>
+            <button type="button" onClick={() => setCropping(true)} disabled={!capturedFile}>Ritaglia</button>
             <button type="button" onClick={confirm} disabled={!capturedFile}>Usa questa foto</button>
           </>
         ) : (
