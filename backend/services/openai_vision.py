@@ -12,7 +12,7 @@ from ..config import settings
 logger = logging.getLogger(__name__)
 
 COVER_PROMPT = """Analyze these book images and extract only metadata clearly visible across them.
-Images are provided with roles: "front cover", "back cover", "copyright or title page", and "spine".
+Images are provided with roles: "front cover", "back cover", one or more "copyright or title page" images, and "spine".
 Use all images together, but do not infer bibliographic facts that are not visible.
 Return a JSON object with exactly these fields, using null for missing scalar values:
 {

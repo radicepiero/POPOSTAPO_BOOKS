@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import client from '../api/client'
 import { db } from '../db'
 import CopyFormModal from '../components/CopyFormModal'
+import { buttonLabels, libraryLabels } from '../utils/labels'
+import { Icon } from '../utils/icons'
 
 interface CopyItem {
   copy_id: number
@@ -19,6 +21,8 @@ interface CopyItem {
   shelf_name?: string | null
   library_name?: string | null
   condition_note?: string | null
+  acquisition_friend_id?: number | null
+  friend_name?: string | null
   reading_status?: string | null
   reading_id?: number | null
 }
@@ -33,6 +37,7 @@ function Library() {
   const [copies, setCopies] = useState<CopyItem[]>([])
   const [pending, setPending] = useState<any[]>([])
   const [editingCopy, setEditingCopy] = useState<CopyItem | null>(null)
+  const [menuCopyId, setMenuCopyId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const load = async () => {
@@ -85,11 +90,11 @@ function Library() {
 
   return (
     <div>
-      <h2>La mia libreria</h2>
+      <h2>{libraryLabels.title}</h2>
       {error && <div className="error">{error}</div>}
       {pending.length > 0 && (
         <>
-          <h3>In attesa di sync</h3>
+          <h3>{libraryLabels.pending}</h3>
           {pending.map((c) => (
             <div className="card" key={`pending-${c.id}`}>
               <p>Copia #{c.copyId} — {c.isbn || 'senza ISBN'}</p>
@@ -98,7 +103,7 @@ function Library() {
           ))}
         </>
       )}
-      <h3>Copie confermate</h3>
+      <h3>{libraryLabels.confirmed}</h3>
       {copies.map((c) => (
         <div className="card" key={c.copy_id} style={{ marginBottom: '0.75rem' }}>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -111,7 +116,7 @@ function Library() {
                 />
               </Link>
             ) : (
-              <div style={{ width: '80px', height: '110px', background: '#eee', borderRadius: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '0.75rem' }}>No cover</div>
+              <div style={{ width: '80px', height: '110px', background: '#eee', borderRadius: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '0.75rem' }}>{libraryLabels.noCover}</div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ margin: '0 0 0.25rem', fontWeight: 600 }}><Link to={`/editions/${c.edition_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{c.title || 'Titolo sconosciuto'}</Link></p>
@@ -138,25 +143,38 @@ function Library() {
                   <button
                     type="button"
                     onClick={() => startReading(c.copy_id, c.edition_id!)}
-                    style={{ marginTop: '0.5rem', padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                    style={{ marginTop: '0.5rem', padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
                   >
-                    Inizia lettura
+                    <Icon name="addReading" size={14} />
+                    {buttonLabels.startReading}
                   </button>
                 )
               )}
             </div>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.75rem' }}>
-            <button type="button" onClick={() => setEditingCopy(c)} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}>Modifica</button>
-            <button type="button" onClick={() => copyAction(c.copy_id, 'lend')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}>Presta</button>
-            <button type="button" onClick={() => copyAction(c.copy_id, 'gift')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}>Regala</button>
-            <button type="button" onClick={() => copyAction(c.copy_id, 'sell')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}>Vendi</button>
-            <button type="button" onClick={() => copyAction(c.copy_id, 'return')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}>Restituisci</button>
-            <button type="button" onClick={() => deleteCopy(c.copy_id)} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', background: '#b00020' }}>Elimina</button>
+          <div style={{ marginTop: '0.75rem' }}>
+            <button
+              type="button"
+              onClick={() => setMenuCopyId(menuCopyId === c.copy_id ? null : c.copy_id)}
+              style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+            >
+              <Icon name="actions" size={16} />
+              {menuCopyId === c.copy_id ? buttonLabels.closeActions : buttonLabels.actions}
+            </button>
+            {menuCopyId === c.copy_id && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => { setEditingCopy(c); setMenuCopyId(null) }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="edit" size={14} />{buttonLabels.modify}</button>
+                <button type="button" onClick={() => copyAction(c.copy_id, 'lend')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="lend" size={14} />{buttonLabels.lend}</button>
+                <button type="button" onClick={() => copyAction(c.copy_id, 'gift')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="gift" size={14} />{buttonLabels.gift}</button>
+                <button type="button" onClick={() => copyAction(c.copy_id, 'sell')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="sell" size={14} />{buttonLabels.sell}</button>
+                <button type="button" onClick={() => copyAction(c.copy_id, 'return')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="return" size={14} />{buttonLabels.return}</button>
+                <button type="button" onClick={() => deleteCopy(c.copy_id)} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', background: '#b00020', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="delete" size={14} />{buttonLabels.delete}</button>
+              </div>
+            )}
           </div>
         </div>
       ))}
-      {copies.length === 0 && !error && <p>Nessuna copia confermata.</p>}
+      {copies.length === 0 && !error && <p>{libraryLabels.empty}</p>}
 
       {editingCopy && (
         <CopyFormModal

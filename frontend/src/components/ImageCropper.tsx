@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react'
-import Cropper, { Area } from 'react-easy-crop'
-import 'react-easy-crop/react-easy-crop.css'
+import { useState } from 'react'
+import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
+import { buttonLabels } from '../utils/labels'
 
 interface Props {
   imageSrc: string
@@ -8,64 +9,56 @@ interface Props {
   onCancel: () => void
 }
 
-function createImage(url: string): Promise<HTMLImageElement> {
+function getCroppedImg(imageSrc: string, pixelCrop: PixelCrop): Promise<File> {
   return new Promise((resolve, reject) => {
     const image = new Image()
-    image.addEventListener('load', () => resolve(image))
-    image.addEventListener('error', (err) => reject(err))
-    image.src = url
-  })
-}
-
-async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<File> {
-  const image = await createImage(imageSrc)
-  const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')
-  if (!ctx) {
-    throw new Error('Impossibile creare il canvas')
-  }
-
-  canvas.width = pixelCrop.width
-  canvas.height = pixelCrop.height
-
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height,
-  )
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error('Canvas vuoto'))
+    image.src = imageSrc
+    image.addEventListener('load', () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = pixelCrop.width
+      canvas.height = pixelCrop.height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        reject(new Error('Impossibile creare il canvas'))
         return
       }
-      resolve(new File([blob], 'cropped.jpg', { type: 'image/jpeg' }))
-    }, 'image/jpeg', 0.92)
+      ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height,
+      )
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Canvas vuoto'))
+            return
+          }
+          resolve(new File([blob], 'cropped.jpg', { type: 'image/jpeg' }))
+        },
+        'image/jpeg',
+        0.92,
+      )
+    })
+    image.addEventListener('error', reject)
   })
 }
 
 export default function ImageCropper({ imageSrc, onCropDone, onCancel }: Props) {
-  const [crop, setCrop] = useState({ x: 0, y: 0 })
-  const [zoom, setZoom] = useState(1)
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+  const [crop, setCrop] = useState<Crop>({ unit: '%', width: 90, height: 90, x: 5, y: 5 })
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null)
   const [processing, setProcessing] = useState(false)
 
-  const onCropComplete = useCallback((_: Area, area: Area) => {
-    setCroppedAreaPixels(area)
-  }, [])
-
   const confirm = async () => {
-    if (!croppedAreaPixels) return
+    if (!completedCrop || completedCrop.width === 0 || completedCrop.height === 0) return
     setProcessing(true)
     try {
-      const file = await getCroppedImg(imageSrc, croppedAreaPixels)
+      const file = await getCroppedImg(imageSrc, completedCrop)
       onCropDone(file)
     } catch {
       // eslint-disable-next-line no-alert
@@ -87,38 +80,25 @@ export default function ImageCropper({ imageSrc, onCropDone, onCancel }: Props) 
         padding: '1rem',
       }}
     >
-      <h3 style={{ color: '#fff', margin: '0 0 0.75rem' }}>Ritaglia l&apos;immagine</h3>
-      <div style={{ position: 'relative', flex: 1, borderRadius: '0.5rem', overflow: 'hidden' }}>
-        <Cropper
-          image={imageSrc}
+      <h3 style={{ color: '#fff', margin: '0 0 0.75rem' }}>{buttonLabels.crop}</h3>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <ReactCrop
           crop={crop}
-          zoom={zoom}
-          aspect={3 / 4}
-          onCropChange={setCrop}
-          onZoomChange={setZoom}
-          onCropComplete={onCropComplete}
-        />
+          onChange={(c) => setCrop(c)}
+          onComplete={(c) => setCompletedCrop(c)}
+        >
+          <img src={imageSrc} alt="Da ritagliare" style={{ maxHeight: '100%', maxWidth: '100%' }} />
+        </ReactCrop>
       </div>
-      <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <label style={{ color: '#fff', fontSize: '0.9rem', flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          Zoom
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.1}
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            style={{ flex: 1 }}
-          />
-        </label>
-      </div>
+      <p style={{ color: '#ccc', fontSize: '0.85rem', margin: '0.5rem 0 0' }}>
+        Trascina i bordi del riquadro per regolare il ritaglio sui 4 lati.
+      </p>
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
         <button type="button" onClick={onCancel} style={{ flex: 1, background: '#555' }}>
-          Annulla
+          {buttonLabels.cancel}
         </button>
         <button type="button" onClick={confirm} disabled={processing} style={{ flex: 1 }}>
-          {processing ? 'Ritaglio...' : 'Usa questa area'}
+          {processing ? 'Ritaglio...' : buttonLabels.usePhoto}
         </button>
       </div>
     </div>

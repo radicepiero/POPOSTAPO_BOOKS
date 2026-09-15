@@ -7,6 +7,7 @@ import Confirm from './pages/Confirm'
 import Library from './pages/Library'
 import EditionDetail from './pages/EditionDetail'
 import Readings from './pages/Readings'
+import AuthorPage from './pages/AuthorPage'
 import './index.css'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
       <nav className="bottom-nav">
         <Link to="/">Home</Link>
         <Link to="/scan">+</Link>
+        <Link to="/authors/latest">Autore</Link>
         <Link to="/readings">Letture</Link>
         <Link to="/library">Libreria</Link>
         <Link to="/login">Login</Link>
@@ -29,6 +31,7 @@ function App() {
           <Route path="/editions/:editionId" element={<EditionDetail />} />
           <Route path="/readings" element={<Readings />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/authors/:authorId" element={<AuthorPage />} />
         </Routes>
       </main>
     </div>

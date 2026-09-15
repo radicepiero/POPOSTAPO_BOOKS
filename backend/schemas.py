@@ -37,6 +37,7 @@ class CopyConfirm(BaseModel):
     title: Optional[str] = None
     subtitle: Optional[str] = None
     authors: Optional[list[str]] = None
+    contributors: Optional[list[Contributor]] = None
     publisher: Optional[str] = None
     year: Optional[int] = None
     isbn: Optional[str] = None
@@ -121,6 +122,7 @@ class EditionConfirmResponse(BaseModel):
 class EditionActionCreate(BaseModel):
     acquisition_date: Optional[date] = None
     acquisition_type_id: Optional[int] = None
+    acquisition_friend_id: Optional[int] = None
     shelf_id: Optional[int] = None
     currency: Optional[str] = None
     price: Optional[Decimal] = None
@@ -130,6 +132,7 @@ class EditionActionCreate(BaseModel):
 class CopyUpdate(BaseModel):
     acquisition_date: Optional[date] = None
     acquisition_type_id: Optional[int] = None
+    acquisition_friend_id: Optional[int] = None
     shelf_id: Optional[int] = None
     currency: Optional[str] = None
     price: Optional[Decimal] = None
@@ -151,6 +154,13 @@ class ReadingStatusUpdate(BaseModel):
     status: Literal["active", "wishlist", "finished", "abandoned"]
 
 
+class BookmarkCreate(BaseModel):
+    page: int
+    bookmark_date: Optional[date] = None
+    note: Optional[str] = None
+    rating: Optional[Decimal] = None
+
+
 class CopyListItem(BaseModel):
     copy_id: int
     edition_id: int | None
@@ -165,5 +175,7 @@ class CopyListItem(BaseModel):
     shelf_name: str | None = None
     library_name: str | None = None
     condition_note: str | None = None
+    acquisition_friend_id: int | None = None
+    friend_name: str | None = None
     reading_status: str | None = None
     reading_id: int | None = None

@@ -22,6 +22,7 @@ function Confirm() {
   const [year, setYear] = useState('')
   const [isbn, setIsbn] = useState('')
   const [pages, setPages] = useState('')
+  const [contributors, setContributors] = useState<{ name: string; role: string }[]>([])
   const [isLocalEdition, setIsLocalEdition] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,6 +44,7 @@ function Confirm() {
       setYear(edition.year ? String(edition.year) : '')
       setIsbn(edition.isbn || '')
       setPages(edition.pages ? String(edition.pages) : '')
+      setContributors((edition.contributors || []).map((c: any) => ({ name: c.name || '', role: c.role || 'author' })))
     })
   }, [jobId, proposalIndex])
 
@@ -59,6 +61,7 @@ function Confirm() {
         title: title || undefined,
         subtitle: subtitle || undefined,
         authors: authors.split(',').map((a) => a.trim()).filter(Boolean),
+        contributors: contributors.filter((c) => c.name.trim()),
         publisher: publisher || undefined,
         year: year ? parseInt(year, 10) : undefined,
         isbn: isbn || undefined,
@@ -117,6 +120,47 @@ function Confirm() {
             Pagine
             <input type="number" value={pages} disabled={isLocalEdition} onChange={(e) => setPages(e.target.value)} />
           </label>
+          <div style={{ marginTop: '0.75rem' }}>
+            <strong>Curatori, traduttori, illustratori…</strong>
+            {contributors.map((contributor, index) => (
+              <div key={index} style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <input
+                  type="text"
+                  placeholder="Nome"
+                  value={contributor.name}
+                  disabled={isLocalEdition}
+                  onChange={(e) => {
+                    const updated = [...contributors]
+                    updated[index].name = e.target.value
+                    setContributors(updated)
+                  }}
+                  style={{ flex: 2 }}
+                />
+                <select
+                  value={contributor.role}
+                  disabled={isLocalEdition}
+                  onChange={(e) => {
+                    const updated = [...contributors]
+                    updated[index].role = e.target.value
+                    setContributors(updated)
+                  }}
+                  style={{ flex: 1 }}
+                >
+                  <option value="author">Autore</option>
+                  <option value="translator">Traduttore</option>
+                  <option value="editor">Curatore</option>
+                  <option value="illustrator">Illustratore</option>
+                  <option value="other">Altro</option>
+                </select>
+                {!isLocalEdition && (
+                  <button type="button" onClick={() => setContributors(contributors.filter((_, i) => i !== index))} style={{ background: '#b00020' }}>×</button>
+                )}
+              </div>
+            ))}
+            {!isLocalEdition && (
+              <button type="button" onClick={() => setContributors([...contributors, { name: '', role: 'author' }])} style={{ marginTop: '0.5rem' }}>Aggiungi contributore</button>
+            )}
+          </div>
         </section>
         {error && <div className="error">{error}</div>}
         <button type="submit" disabled={loading}>

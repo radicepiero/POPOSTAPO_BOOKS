@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, Fo
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..auth import get_current_user_uuid
-from ..models import AcquisitionType, Author, Copy, CopyEnrichmentJob, Edition, EditionsWork, Library, Publisher, Reading, Shelf, Work, WorksAuthor
+from ..models import AcquisitionType, Author, Copy, CopyEnrichmentJob, Edition, EditionsWork, Friend, Library, Membre, Publisher, Reading, Shelf, Work, WorksAuthor
 from ..schemas import CopyDraftCreate, CopyDraftResponse, EnrichmentJobResponse, CopyConfirm, CopyConfirmResponse, CopyListItem, CopyUpdate
 from ..services.enrichment import process_enrichment_job
 from ..services.confirmation import confirm_copy_from_job
@@ -205,6 +205,25 @@ def list_libraries(
     return result
 
 
+@router.get("/friends", response_model=list[dict])
+def list_friends(
+    db: Session = Depends(get_db),
+    owner_uuid: str = Depends(get_current_user_uuid),
+):
+    owner_id = uuid_module.UUID(owner_uuid)
+    membre = db.query(Membre).filter_by(uuid=owner_id).first()
+    if not membre:
+        return []
+    friends = db.query(Friend).filter_by(owner_id=membre.id).order_by(Friend.name, Friend.surname).all()
+    return [
+        {
+            "id": f.id,
+            "name": " ".join(filter(None, [f.name, f.surname])).strip() or f.pseudo or f.email or f"Friend #{f.id}",
+        }
+        for f in friends
+    ]
+
+
 @router.get("", response_model=list[CopyListItem])
 def list_copies(
     db: Session = Depends(get_db),
@@ -228,7 +247,9 @@ def list_copies(
                 "acquisition_type_name": None,
                 "shelf_name": None,
                 "library_name": None,
-                "condition_note": None,
+                "condition_note": copy.condition_note,
+                "acquisition_friend_id": None,
+                "friend_name": None,
                 "reading_status": None,
                 "reading_id": None,
             })
@@ -252,6 +273,7 @@ def list_copies(
         shelf = db.query(Shelf).filter_by(id=copy.shelf_id).first() if copy.shelf_id else None
         library = db.query(Library).filter_by(id=shelf.library_id).first() if shelf else None
         acq_type = db.query(AcquisitionType).filter_by(id=copy.acquisition_type_id).first() if copy.acquisition_type_id else None
+        friend = db.query(Friend).filter_by(id=copy.acquisition_friend_id).first() if copy.acquisition_friend_id else None
         reading = (
             db.query(Reading)
             .filter_by(copy_id=copy.id, owner_uuid=uuid_module.UUID(owner_uuid))
@@ -272,6 +294,8 @@ def list_copies(
             "shelf_name": shelf.name if shelf else None,
             "library_name": library.name if library else None,
             "condition_note": copy.condition_note,
+            "acquisition_friend_id": copy.acquisition_friend_id,
+            "friend_name": " ".join(filter(None, [friend.name, friend.surname])).strip() or friend.pseudo or friend.email if friend else None,
             "reading_status": reading.status if reading else None,
             "reading_id": reading.id if reading else None,
         })
@@ -315,6 +339,7 @@ def _copy_to_list_item(copy: Copy, db: Session) -> dict:
     shelf = db.query(Shelf).filter_by(id=copy.shelf_id).first() if copy.shelf_id else None
     library = db.query(Library).filter_by(id=shelf.library_id).first() if shelf else None
     acq_type = db.query(AcquisitionType).filter_by(id=copy.acquisition_type_id).first() if copy.acquisition_type_id else None
+    friend = db.query(Friend).filter_by(id=copy.acquisition_friend_id).first() if copy.acquisition_friend_id else None
     reading = (
         db.query(Reading)
         .filter_by(copy_id=copy.id, owner_uuid=copy.owner_uuid)
@@ -335,6 +360,8 @@ def _copy_to_list_item(copy: Copy, db: Session) -> dict:
         "shelf_name": shelf.name if shelf else None,
         "library_name": library.name if library else None,
         "condition_note": copy.condition_note,
+        "acquisition_friend_id": copy.acquisition_friend_id,
+        "friend_name": " ".join(filter(None, [friend.name, friend.surname])).strip() or friend.pseudo or friend.email if friend else None,
         "reading_status": reading.status if reading else None,
         "reading_id": reading.id if reading else None,
     }
@@ -350,7 +377,7 @@ def update_copy(
     copy = db.query(Copy).filter_by(id=copy_id, owner_uuid=uuid_module.UUID(owner_uuid)).first()
     if not copy:
         raise HTTPException(status_code=404, detail="Copy not found")
-    for field in ["acquisition_date", "acquisition_type_id", "shelf_id", "currency", "price", "condition_note", "status"]:
+    for field in ["acquisition_date", "acquisition_type_id", "acquisition_friend_id", "shelf_id", "currency", "price", "condition_note", "status"]:
         value = getattr(data, field)
         if value is not None:
             setattr(copy, field, value)

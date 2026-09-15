@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import client from '../api/client'
 import BarcodeScanner from '../components/BarcodeScanner'
 import BookCameraCapture from '../components/BookCameraCapture'
+import EditionCard from '../components/EditionCard'
 import ImageCropper from '../components/ImageCropper'
 import {
   Candidate,
@@ -10,22 +11,9 @@ import {
   mapOpenLibrarySearchResponse,
   mapOpenAIVisionResponse,
 } from '../services/bibliographicMappers'
+import { formLabels, imageRoleLabels, scanLabels, sourceLabels } from '../utils/labels'
 
 type ImageKind = 'front' | 'back' | 'copyright' | 'spine'
-
-const sourceColors: Record<string, string> = {
-  postgresql: '#e8f5e9',
-  open_library: '#f0f0f0',
-  google_books: '#f0f0f0',
-  openai_vision: '#e3f2fd',
-}
-
-const sourceLabels: Record<string, string> = {
-  postgresql: 'Catalogo locale',
-  open_library: 'Open Library',
-  google_books: 'Google Books',
-  openai_vision: 'Foto copertina',
-}
 
 function isbn10To13(isbn10: string): string | undefined {
   const clean = isbn10.replace(/[-\s]/g, '').toUpperCase()
@@ -52,92 +40,6 @@ function candidateScore(c: Candidate): number {
   if (c.covers?.length) score += 5
   if (c.language) score += 2
   return score
-}
-
-function CandidateCard({ candidate, onSelect }: { candidate: Candidate; onSelect: (c: Candidate) => void }) {
-  const [expanded, setExpanded] = useState(false)
-
-  const details: { label: string; value: string }[] = []
-  if (candidate.language) details.push({ label: 'Lingua', value: candidate.language })
-
-  if (candidate.isbn13) details.push({ label: 'ISBN-13', value: candidate.isbn13 })
-  if (candidate.isbn10) details.push({ label: 'ISBN-10', value: candidate.isbn10 })
-  if (candidate.isbn10 && candidate.isbn13) {
-    details.push({
-      label: 'Coerenza ISBN',
-      value: isbn10To13(candidate.isbn10) === candidate.isbn13 ? 'ISBN-10 e ISBN-13 equivalenti' : 'Identificativi non equivalenti',
-    })
-  }
-  if (candidate.physical_format) details.push({ label: 'Formato', value: candidate.physical_format })
-  if (candidate.edition_name?.length) details.push({ label: 'Edizione', value: candidate.edition_name.join(', ') })
-  if (candidate.series?.length) details.push({ label: 'Collana', value: candidate.series.join(', ') })
-  if (candidate.publish_places?.length) details.push({ label: 'Luogo', value: candidate.publish_places.join(', ') })
-  if (candidate.ebook_access && candidate.ebook_access !== 'no_ebook') details.push({ label: 'eBook', value: candidate.ebook_access })
-  if (candidate.average_rating) details.push({ label: 'Rating', value: `${candidate.average_rating}${candidate.ratings_count ? ` (${candidate.ratings_count})` : ''}` })
-  if (candidate.info_url) details.push({ label: 'Fonte', value: candidate.info_url })
-
-  const bgColor = sourceColors[candidate.source] || '#fff'
-  const sourceLabel = sourceLabels[candidate.source] || candidate.source
-
-  return (
-    <div className="card" style={{ marginBottom: '0.75rem', backgroundColor: bgColor }}>
-      <div>
-        {candidate.covers?.[0] && (
-          <img
-            src={candidate.covers[0]}
-            alt="Copertina"
-            style={{ maxWidth: '80px', maxHeight: '120px', objectFit: 'contain', marginRight: '0.75rem', float: 'left' }}
-          />
-        )}
-        <p><strong>{candidate.title || 'Titolo sconosciuto'}</strong></p>
-        {candidate.subtitle && <p>{candidate.subtitle}</p>}
-        <p>Autori: {candidate.authors?.join(', ') || '—'}</p>
-        <p>
-          Editore: {candidate.publisher || '—'}
-          {candidate.year && ` (${candidate.year})`}
-        </p>
-        <p>ISBN: {candidate.isbn || '—'}{candidate.pages ? ` — ${candidate.pages} pp.` : ''}</p>
-        <p style={{ fontSize: '0.75rem', color: '#888', margin: '0.25rem 0 0' }}>{sourceLabel}</p>
-        {candidate.warnings?.map((warning) => (
-          <p key={warning} style={{ background: '#fff3cd', color: '#765c00', padding: '0.5rem', borderRadius: '0.35rem', fontSize: '0.8rem' }}>{warning}</p>
-        ))}
-        <div style={{ clear: 'both' }} />
-      </div>
-      {details.length > 0 && (
-        <>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}
-            style={{
-              background: 'none', border: 'none', color: '#0077cc', cursor: 'pointer',
-              padding: '0.25rem 0', fontSize: '0.85rem', marginTop: '0.25rem',
-            }}
-          >
-            {expanded ? '− Meno dettagli' : '+ Più dettagli'}
-          </button>
-          {expanded && (
-            <div style={{ fontSize: '0.85rem', color: '#555', marginTop: '0.25rem' }}>
-              {details.map((d) => (
-                <p key={d.label} style={{ margin: '0.15rem 0' }}>
-                  <strong>{d.label}:</strong>{' '}
-                  {d.label === 'Fonte' ? (
-                    <a href={d.value} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                      {d.value}
-                    </a>
-                  ) : d.value}
-                </p>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-      <div style={{ marginTop: '0.75rem' }}>
-        <button type="button" onClick={() => onSelect(candidate)} style={{ width: '100%' }}>
-          Usa questa edizione
-        </button>
-      </div>
-    </div>
-  )
 }
 
 function isValidIsbn13(value: string) {
@@ -175,11 +77,10 @@ function Scan() {
   const [showCamera, setShowCamera] = useState(false)
   const [image, setImage] = useState<File | null>(null)
   const [backImage, setBackImage] = useState<File | null>(null)
-  const [copyrightPage, setCopyrightPage] = useState<File | null>(null)
+  const [copyrightPages, setCopyrightPages] = useState<{ file: File; preview: string }[]>([])
   const [spineImage, setSpineImage] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [backPreview, setBackPreview] = useState<string | null>(null)
-  const [copyrightPreview, setCopyrightPreview] = useState<string | null>(null)
   const [spinePreview, setSpinePreview] = useState<string | null>(null)
   const [scanning, setScanning] = useState(false)
   const [capturing, setCapturing] = useState<ImageKind | null>(null)
@@ -203,8 +104,7 @@ function Scan() {
       setBackImage(file)
       setBackPreview(url)
     } else if (kind === 'copyright') {
-      setCopyrightPage(file)
-      setCopyrightPreview(url)
+      setCopyrightPages((current) => [...current, { file, preview: url }])
     } else if (kind === 'spine') {
       setSpineImage(file)
       setSpinePreview(url)
@@ -478,7 +378,7 @@ function Scan() {
       const form = new FormData()
       form.append('image', image)
       if (backImage) form.append('back_image', backImage)
-      if (copyrightPage) form.append('copyright_page', copyrightPage)
+      copyrightPages.forEach((cp) => form.append('copyright_pages', cp.file))
       if (spineImage) form.append('spine_image', spineImage)
       const resp = await client.post('/editions/search/cover', form)
       const data = resp.data
@@ -599,18 +499,18 @@ function Scan() {
 
   return (
     <div>
-      <h2>Cerca un'edizione</h2>
+      <h2>{scanLabels.title}</h2>
       <form onSubmit={handleSubmit}>
         {/* --- Simple search (single field) --- */}
         {!showAdvanced && !showCamera && (
           <>
             <label htmlFor="isbn-search" style={{ fontWeight: 600 }}>ISBN</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto auto', gap: '0.5rem', alignItems: 'stretch' }}>
-              <input id="isbn-search" type="text" inputMode="numeric" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Inserisci ISBN" style={{ margin: 0 }} />
-              <button type="button" onClick={() => setScanning(true)} aria-label="Scansiona codice a barre" title="Scansiona codice a barre" style={{ padding: '0.65rem 0.8rem' }}>Scanner</button>
-              <button type="submit" disabled={searching} style={{ padding: '0.65rem 0.9rem' }}>{searching ? '...' : 'Cerca'}</button>
+              <input id="isbn-search" type="text" inputMode="numeric" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={scanLabels.isbnPlaceholder} style={{ margin: 0 }} />
+              <button type="button" onClick={() => setScanning(true)} aria-label={scanLabels.scanner} title={scanLabels.scanner} style={{ padding: '0.65rem 0.8rem' }}>{scanLabels.scanner}</button>
+              <button type="submit" disabled={searching} style={{ padding: '0.65rem 0.9rem' }}>{searching ? '...' : scanLabels.search}</button>
             </div>
-            <button type="button" onClick={() => setShowAdvanced(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#555', fontSize: '0.85rem' }}>Ricerca per titolo o autore</button>
+            <button type="button" onClick={() => setShowAdvanced(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#555', fontSize: '0.85rem' }}>{scanLabels.titleAuthorSearch}</button>
           </>
         )}
 
@@ -619,10 +519,10 @@ function Scan() {
           <div className="card" style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><strong>Ricerca per dati bibliografici</strong><button type="button" onClick={() => setShowAdvanced(false)} style={{ background: 'transparent', color: '#555' }}>Chiudi</button></div>
             <label>ISBN<input type="text" value={isbn} onChange={(e) => setIsbn(e.target.value)} /></label>
-            <label>Titolo<input type="text" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
-            <label>Autore<input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} /></label>
-            <button type="submit" disabled={searching} style={{ width: '100%' }}>{searching ? 'Ricerca in corso...' : 'Cerca'}</button>
-            <button type="button" onClick={() => setShowCamera(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#1769aa', textDecoration: 'underline' }}>Cerca per immagini</button>
+            <label>{formLabels.title}<input type="text" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
+            <label>{formLabels.author}<input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} /></label>
+            <button type="submit" disabled={searching} style={{ width: '100%' }}>{searching ? 'Ricerca in corso...' : scanLabels.search}</button>
+            <button type="button" onClick={() => setShowCamera(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#1769aa', textDecoration: 'underline' }}>{scanLabels.imageSearch}</button>
           </div>
         )}
 
@@ -630,12 +530,11 @@ function Scan() {
         {showCamera && (
           <div className="card" style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}><strong>Identifica il libro dalle foto</strong><button type="button" onClick={() => setShowCamera(false)} style={{ background: 'transparent', color: '#555' }}>Indietro</button></div>
-            <p style={{ color: '#666', marginTop: 0 }}>La copertina anteriore è necessaria. Le altre immagini migliorano il riconoscimento.</p>
+            <p style={{ color: '#666', marginTop: 0 }}>{scanLabels.coverHint}</p>
             {[
-              { kind: 'front' as const, label: 'Foto copertina', required: true, file: image, preview },
-              { kind: 'back' as const, label: 'Foto retro', required: false, file: backImage, preview: backPreview },
-              { kind: 'spine' as const, label: 'Foto fianco/spina', required: false, file: spineImage, preview: spinePreview },
-              { kind: 'copyright' as const, label: 'Foto dati editoriali', required: false, file: copyrightPage, preview: copyrightPreview },
+              { kind: 'front' as const, label: imageRoleLabels['front cover'], required: true, file: image, preview },
+              { kind: 'back' as const, label: imageRoleLabels['back cover'], required: false, file: backImage, preview: backPreview },
+              { kind: 'spine' as const, label: imageRoleLabels['spine'], required: false, file: spineImage, preview: spinePreview },
             ].map((item) => (
               <div key={item.kind} style={{ borderTop: '1px solid #ddd', padding: '0.9rem 0' }}>
                 <strong>{item.label}</strong><span style={{ color: '#777', fontSize: '0.8rem' }}> · {item.required ? 'obbligatoria' : 'opzionale'}</span>
@@ -648,9 +547,8 @@ function Scan() {
                     type="button"
                     onClick={() => {
                       const messages: Record<typeof item.kind, string> = {
-                        back: 'Procedi senza foto del retro.',
-                        spine: 'Procedi senza foto del fianco.',
-                        copyright: 'Procedi senza pagina interna.',
+                        back: scanLabels.proceedBack,
+                        spine: scanLabels.proceedSpine,
                         front: '',
                       }
                       setNotice(messages[item.kind])
@@ -659,9 +557,8 @@ function Scan() {
                   >
                     {(() => {
                       const labels: Record<typeof item.kind, string> = {
-                        back: 'Non ho la foto del retro',
-                        spine: 'Non ho la foto del fianco',
-                        copyright: 'Non ho la pagina interna',
+                        back: scanLabels.skipBack,
+                        spine: scanLabels.skipSpine,
                         front: '',
                       }
                       return labels[item.kind]
@@ -671,7 +568,35 @@ function Scan() {
                 {item.preview && <img src={item.preview} alt={item.label} style={{ display: 'block', maxWidth: '100%', maxHeight: '160px', marginTop: '0.6rem', borderRadius: '0.5rem' }} />}
               </div>
             ))}
-            <button type="submit" disabled={!image || searching} style={{ width: '100%', marginTop: '0.5rem' }}>{searching ? 'Analisi in corso...' : 'Analizza libro'}</button>
+            <div style={{ borderTop: '1px solid #ddd', padding: '0.9rem 0' }}>
+              <strong>{imageRoleLabels['copyright or title page']}</strong><span style={{ color: '#777', fontSize: '0.8rem' }}> · opzionale, più pagine</span>
+              {copyrightPages.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', margin: '0.5rem 0' }}>
+                  {copyrightPages.map((cp, index) => (
+                    <div key={index} style={{ position: 'relative' }}>
+                      <img src={cp.preview} alt={`Pagina dati editoriali ${index + 1}`} style={{ width: '60px', height: '80px', objectFit: 'cover', borderRadius: '0.4rem' }} />
+                      <button
+                        type="button"
+                        onClick={() => setCopyrightPages((current) => current.filter((_, i) => i !== index))}
+                        style={{ position: 'absolute', top: '-0.3rem', right: '-0.3rem', width: '1.2rem', height: '1.2rem', padding: 0, borderRadius: '50%', background: '#b00020', color: '#fff', fontSize: '0.7rem', lineHeight: 1 }}
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setCapturing('copyright')} style={{ flex: 1 }}>Scatta</button>
+                <label style={{ flex: 1, margin: 0 }}>Carica<input type="file" accept="image/*" onChange={(e) => handleOptionalFile('copyright', e.target.files?.[0])} /></label>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNotice(scanLabels.proceedCopyright)}
+                style={{ marginTop: '0.5rem', padding: 0, background: 'transparent', color: '#555', textDecoration: 'underline' }}
+              >
+                {scanLabels.skipCopyright}
+              </button>
+            </div>
+            <button type="submit" disabled={!image || searching} style={{ width: '100%', marginTop: '0.5rem' }}>{searching ? 'Analisi in corso...' : scanLabels.analyze}</button>
           </div>
         )}
 
@@ -744,12 +669,12 @@ function Scan() {
 
       {!editing && sortedResults.length > 0 && (
         <div style={{ marginTop: '1rem' }}>
-          <h3>Risultati</h3>
+          <h3>{scanLabels.results}</h3>
           {sortedResults.map((candidate, idx) => (
-            <CandidateCard
+            <EditionCard
               key={`${candidate.source}-${candidate.external_id || candidate.isbn || candidate.title || ''}-${idx}`}
               candidate={candidate}
-              onSelect={handleCandidateSelect}
+              onUse={() => handleCandidateSelect(candidate)}
             />
           ))}
         </div>

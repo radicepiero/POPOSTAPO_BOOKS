@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 from ..auth import get_current_user_uuid
 from ..database import get_db
-from ..models import Membre, Reading
-from ..schemas import ReadingStatusUpdate
+from ..models import Bookmark, Edition, Membre, Reading
+from ..schemas import BookmarkCreate, ReadingStatusUpdate
 
 
 router = APIRouter(prefix="/readings", tags=["readings"])
@@ -128,3 +128,56 @@ def update_reading_status(
     reading.status_changed_at = db.execute(text("SELECT now() ")).scalar_one()
     db.commit()
     return {"reading_id": reading.id, "status": reading.status, "finished": reading.finished}
+
+
+@router.delete("/{reading_id}", status_code=204)
+def delete_reading(
+    reading_id: int,
+    db: Session = Depends(get_db),
+    owner_uuid: str = Depends(get_current_user_uuid),
+):
+    owner = UUID(owner_uuid)
+    membre = db.query(Membre).filter_by(uuid=owner).first()
+    reading = db.query(Reading).filter(Reading.id == reading_id).first()
+    owns_reading = reading is not None and (reading.owner_uuid == owner or (membre is not None and reading.owner_membre_id == membre.id))
+    if not owns_reading:
+        raise HTTPException(status_code=404, detail="Reading not found")
+    db.delete(reading)
+    db.commit()
+    return
+
+
+@router.post("/{reading_id}/bookmarks", status_code=201)
+def add_bookmark(
+    reading_id: int,
+    data: BookmarkCreate,
+    db: Session = Depends(get_db),
+    owner_uuid: str = Depends(get_current_user_uuid),
+):
+    owner = UUID(owner_uuid)
+    membre = db.query(Membre).filter_by(uuid=owner).first()
+    reading = db.query(Reading).filter(Reading.id == reading_id).first()
+    owns_reading = reading is not None and (reading.owner_uuid == owner or (membre is not None and reading.owner_membre_id == membre.id))
+    if not owns_reading:
+        raise HTTPException(status_code=404, detail="Reading not found")
+    bookmark = Bookmark(
+        reading_id=reading_id,
+        page=data.page,
+        bookmark_date=data.bookmark_date or date.today(),
+        note=data.note,
+        rating=data.rating,
+    )
+    db.add(bookmark)
+    if data.page > reading.current_page:
+        reading.current_page = data.page
+
+    edition = db.query(Edition).filter(Edition.id == reading.edition_id).first() if reading.edition_id else None
+    if edition and edition.pages and edition.pages > 0 and data.page >= edition.pages:
+        reading.status = "finished"
+        reading.finished = True
+        if not reading.end_date:
+            reading.end_date = data.bookmark_date or date.today()
+
+    db.commit()
+    db.refresh(bookmark)
+    return {"bookmark_id": bookmark.id, "reading_id": reading_id, "page": bookmark.page, "status": reading.status}

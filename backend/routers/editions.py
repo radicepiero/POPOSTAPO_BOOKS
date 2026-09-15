@@ -68,16 +68,22 @@ def search_edition_upload(
 def search_cover(
     image: UploadFile = File(...),
     back_image: Optional[UploadFile] = File(None),
-    copyright_page: Optional[UploadFile] = File(None),
+    copyright_pages: Optional[list[UploadFile]] = File(None),
     spine_image: Optional[UploadFile] = File(None),
     owner_uuid: str = Depends(get_current_user_uuid),
 ):
     """Analyze available book images using OpenAI Vision and return extracted metadata."""
-    uploaded = {"front cover": image, "back cover": back_image, "copyright or title page": copyright_page, "spine": spine_image}
-    image_paths = {}
-    image_urls = {}
+    uploaded: dict[str, object] = {"front cover": image, "back cover": back_image, "spine": spine_image}
+    if copyright_pages:
+        for index, cp in enumerate(copyright_pages):
+            uploaded[f"copyright or title page {index + 1}"] = cp
+
+    image_paths: dict[str, str] = {}
+    image_urls: dict[str, str] = {}
     for role, upload in uploaded.items():
         if upload is None:
+            continue
+        if isinstance(upload, list):
             continue
         extension = pathlib.Path(upload.filename or "").suffix or ".jpg"
         file_path = UPLOAD_DIR / f"{uuid_module.uuid4().hex}{extension}"
@@ -221,6 +227,7 @@ def confirm_edition(data: CopyConfirm, db: Session = Depends(get_db), owner_uuid
         "title": data.title,
         "subtitle": data.subtitle,
         "authors": data.authors,
+        "contributors": [c.model_dump() for c in data.contributors] if data.contributors else None,
         "publisher": data.publisher,
         "year": data.year,
         "isbn": data.isbn,
@@ -250,6 +257,7 @@ def add_copy(edition_id: int, data: EditionActionCreate, db: Session = Depends(g
         edition_id=edition_id,
         acquisition_date=data.acquisition_date,
         acquisition_type_id=data.acquisition_type_id,
+        acquisition_friend_id=data.acquisition_friend_id,
         shelf_id=data.shelf_id,
         currency=data.currency,
         price=data.price,

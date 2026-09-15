@@ -1,12 +1,61 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import client from '../api/client'
+import EditionCard from '../components/EditionCard'
+import { Candidate } from '../services/bibliographicMappers'
 
 interface JobResult {
   id: string
   copy_id?: number
   status: string
   result?: any
+}
+
+function toCandidate(candidate: any): Candidate {
+  return {
+    source: candidate.source || 'unknown',
+    record_type: candidate.record_type || 'edition',
+    external_id: candidate.external_id,
+    local_edition_id: candidate.local_edition_id,
+    title: candidate.title,
+    subtitle: candidate.subtitle,
+    edition_name: candidate.edition_name,
+    authors: candidate.authors,
+    contributors: candidate.contributors,
+    translators: candidate.translators,
+    illustrators: candidate.illustrators,
+    editors: candidate.editors,
+    publishers: candidate.publishers,
+    publisher: candidate.publisher,
+    publish_date: candidate.publish_date,
+    year: candidate.year,
+    publish_places: candidate.publish_places,
+    physical_format: candidate.physical_format,
+    print_type: candidate.print_type,
+    isbn: candidate.isbn,
+    isbn10: candidate.isbn10,
+    isbn13: candidate.isbn13,
+    issn: candidate.issn,
+    lccn: candidate.lccn,
+    oclc: candidate.oclc,
+    other_identifiers: candidate.other_identifiers,
+    pages: candidate.pages,
+    language: candidate.language || candidate.languages?.[0],
+    series: candidate.series,
+    covers: candidate.covers,
+    images: candidate.images,
+    thumbnail: candidate.thumbnail,
+    preview_url: candidate.preview_url,
+    info_url: candidate.info_url,
+    ebook_access: candidate.ebook_access,
+    has_fulltext: candidate.has_fulltext,
+    average_rating: candidate.average_rating,
+    ratings_count: candidate.ratings_count,
+    dimensions: candidate.dimensions,
+    weight: candidate.weight,
+    warnings: candidate.warnings,
+    raw: candidate.raw,
+  }
 }
 
 function Propose() {
@@ -50,7 +99,7 @@ function Propose() {
         {job.result?.reason && <p style={{ color: '#666' }}>Motivo: {typeof job.result.reason === 'string' ? job.result.reason : JSON.stringify(job.result.reason)}</p>}
         {ocr && (
           <details style={{ margin: '1rem 0', color: '#666' }}>
-            <summary>Testo letto dall’OCR</summary>
+            <summary>Testo letto dall&apos;OCR</summary>
             <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{JSON.stringify(ocr, null, 2)}</pre>
           </details>
         )}
@@ -76,47 +125,17 @@ function Propose() {
 
   return (
     <div>
-      <h2>Scegli l'edizione</h2>
+      <h2>Scegli l&apos;edizione</h2>
       {candidates.map((candidate: any, index: number) => (
-        <div className="card" key={`${candidate.isbn || candidate.title}-${index}`}>
-          {candidate.covers?.[0] && (
-            <img src={candidate.covers[0]} alt={`Copertina di ${candidate.title || 'questa edizione'}`} style={{ maxWidth: '100px', maxHeight: '150px', objectFit: 'contain' }} />
-          )}
-          <section className="metadata-section">
-            <h3>Opera</h3>
-            <p><strong>Titolo:</strong> {candidate.title || 'Non identificato'}</p>
-            <p><strong>Autore:</strong> {candidate.authors?.join(', ') || '—'}</p>
-          </section>
-          <section className="metadata-section">
-            <h3>Edizione</h3>
-            <p><strong>Titolo:</strong> {candidate.title || '—'}</p>
-            {candidate.subtitle && <p><strong>Sottotitolo:</strong> {candidate.subtitle}</p>}
-            {candidate.contributors?.map((contributor: any, contributorIndex: number) => (
-              <p key={`${contributor.role}-${contributorIndex}`}><strong>{contributor.role === 'translator' ? 'Traduttore' : contributor.role === 'editor' ? 'Curatore' : contributor.role}:</strong> {contributor.name}</p>
-            ))}
-            <p><strong>Editore:</strong> {candidate.publishers?.join(', ') || '—'}</p>
-            <p><strong>Data di pubblicazione:</strong> {candidate.publish_date || candidate.year || '—'}</p>
-            <p><strong>ISBN:</strong> {candidate.isbn || '—'}</p>
-            {candidate.pages && <p><strong>Pagine:</strong> {candidate.pages}</p>}
-            {(candidate.language || candidate.languages?.[0]) && <p><strong>Lingua:</strong> {candidate.language || candidate.languages?.[0]}</p>}
-            {candidate.edition_name?.length > 0 && <p><strong>Edizione:</strong> {candidate.edition_name.join(', ')}</p>}
-          </section>
-          <section className="metadata-source">
-            <p><strong>Fonte:</strong> {candidate.source || 'sconosciuta'}</p>
-            {candidate.external_id && <p><strong>ID fonte:</strong> {candidate.external_id}</p>}
-          </section>
-          <button
-            type="button"
-            onClick={() => navigate(`/confirm/${jobId}?index=${index}`)}
-            style={{ width: '100%', marginTop: '0.75rem' }}
-          >
-            Usa questa edizione
-          </button>
-        </div>
+        <EditionCard
+          key={`${candidate.isbn || candidate.title}-${index}`}
+          candidate={toCandidate(candidate)}
+          onUse={() => navigate(`/confirm/${jobId}?index=${index}`)}
+        />
       ))}
       {ocr && (
         <details style={{ margin: '1rem 0', color: '#666' }}>
-          <summary>Testo letto dall’OCR</summary>
+          <summary>Testo letto dall&apos;OCR</summary>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>{JSON.stringify(ocr, null, 2)}</pre>
         </details>
       )}

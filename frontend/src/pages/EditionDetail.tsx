@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import client from '../api/client'
+import AuthorCard from '../components/AuthorCard'
 import CopyFormModal from '../components/CopyFormModal'
+import EditionCard from '../components/EditionCard'
+import WorkCard from '../components/WorkCard'
+import { Candidate } from '../services/bibliographicMappers'
+import { buttonLabels, formLabels } from '../utils/labels'
+import { Icon } from '../utils/icons'
 
 function EditionDetail() {
   const { editionId } = useParams<{ editionId: string }>()
@@ -48,50 +54,22 @@ function EditionDetail() {
 
   return (
     <div>
-      <h2>{edition.title}</h2>
-      {(Object.keys(edition.images || {}).length > 0 || edition.covers?.length > 0) && (
-        <section className="card">
-          <h3>Immagini dell&apos;edizione</h3>
-          <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto' }}>
-            {(Object.keys(edition.images || {}).length > 0
-              ? Object.entries(edition.images).map(([role, url]) => ({ role, url }))
-              : edition.covers.map((url: string, index: number) => ({ role: index === 0 ? 'front cover' : 'image', url })))
-              .map((item: any) => (
-                <figure key={`${item.role}-${item.url}`} style={{ margin: 0, minWidth: '110px' }}>
-                  <img src={item.url} alt={item.role} style={{ width: '110px', height: '150px', objectFit: 'contain', borderRadius: '0.4rem' }} />
-                  <figcaption style={{ fontSize: '0.75rem', color: '#666' }}>{{ 'front cover': 'Copertina', 'back cover': 'Retro', 'copyright or title page': 'Dati editoriali', spine: 'Spina', image: 'Immagine' }[item.role as string] || item.role}</figcaption>
-                </figure>
-              ))}
-          </div>
-        </section>
-      )}
-      <section className="card">
-        <h3>Opera</h3>
-        <p><strong>Titolo originale:</strong> {edition.work_title || 'Non ancora identificata'}</p>
-        <p><strong>Autori:</strong> {edition.authors?.join(', ') || 'Non ancora identificati'}</p>
-      </section>
-      <section className="card">
-        <h3>Edizione</h3>
-        {edition.subtitle && <p><strong>Sottotitolo:</strong> {edition.subtitle}</p>}
-        <p><strong>Editore:</strong> {edition.publishers?.join(', ') || '—'}</p>
-        <p><strong>Anno:</strong> {edition.year || '—'}</p>
-        <p><strong>ISBN:</strong> {edition.isbn || '—'}</p>
-        <p><strong>Pagine:</strong> {edition.pages || '—'}</p>
-        {edition.contributors?.map((contributor: any, index: number) => <p key={index}><strong>{contributor.role}:</strong> {contributor.name}</p>)}
-      </section>
+      <EditionCard candidate={edition as Candidate} />
+      <WorkCard title={edition.title} originalTitle={edition.work_title} authors={edition.authors} />
+      <AuthorCard contributors={edition.contributors || []} />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-        <button onClick={() => setAction('reading')}>Registra lettura</button>
-        <button onClick={addToWishlist}>Aggiungi alla wishlist</button>
-        <button onClick={() => setAction('copy')}>Aggiungi copia</button>
+        <button onClick={() => setAction('reading')} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="addReading" size={16} />{buttonLabels.addReading}</button>
+        <button onClick={addToWishlist} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="addWishlist" size={16} />{buttonLabels.addWishlist}</button>
+        <button onClick={() => setAction('copy')} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="addCopy" size={16} />{buttonLabels.addCopy}</button>
       </div>
       {action === 'reading' && (
         <form className="card" onSubmit={addReading}>
           <h3>Lettura</h3>
-          <label>Data di inizio<input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>
-          <label>Pagina corrente<input type="number" min="0" value={currentPage} onChange={(event) => setCurrentPage(event.target.value)} /></label>
+          <label>{formLabels.acquisitionDate}<input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>
+          <label>{formLabels.page}<input type="number" min="0" value={currentPage} onChange={(event) => setCurrentPage(event.target.value)} /></label>
           <label><input type="checkbox" checked={finished} onChange={(event) => setFinished(event.target.checked)} style={{ width: 'auto', marginRight: '0.5rem' }} />Terminata</label>
-          <label>Valutazione<input type="number" min="0" max="5" step="0.5" value={rating} onChange={(event) => setRating(event.target.value)} /></label>
-          <button type="submit">Salva lettura</button>
+          <label>{formLabels.rating}<input type="number" min="0" max="5" step="0.5" value={rating} onChange={(event) => setRating(event.target.value)} /></label>
+          <button type="submit" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="save" size={16} />{buttonLabels.save}</button>
         </form>
       )}
       {action === 'copy' && (

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import ImageCropper from './ImageCropper'
+import { buttonLabels } from '../utils/labels'
+import { Icon } from '../utils/icons'
 
 interface Props {
   onCapture: (file: File) => void
@@ -121,7 +123,7 @@ export default function BookCameraCapture({ onCapture, onClose }: Props) {
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h3 style={{ margin: 0, color: '#fff' }}>Scatta foto del libro</h3>
+        <h3 style={{ margin: 0, color: '#fff' }}>{buttonLabels.takePhoto}</h3>
         <button onClick={onClose} style={{ background: 'transparent', color: '#fff', fontSize: '1.5rem' }}>✕</button>
       </div>
       {error && <div className="error" style={{ marginBottom: '1rem' }}>{error}</div>}
@@ -136,12 +138,12 @@ export default function BookCameraCapture({ onCapture, onClose }: Props) {
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '0.75rem' }}>
         {captured ? (
           <>
-            <button type="button" onClick={retake}>Riprova</button>
-            <button type="button" onClick={() => setCropping(true)} disabled={!capturedFile}>Ritaglia</button>
-            <button type="button" onClick={confirm} disabled={!capturedFile}>Usa questa foto</button>
+            <button type="button" onClick={retake} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="cancel" size={14} />{buttonLabels.retake}</button>
+            <button type="button" onClick={() => setCropping(true)} disabled={!capturedFile} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="edit" size={14} />{buttonLabels.crop}</button>
+            <button type="button" onClick={confirm} disabled={!capturedFile} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="useThis" size={14} />{buttonLabels.usePhoto}</button>
           </>
         ) : (
-          <button type="button" onClick={takePhoto} disabled={capturing}>{capturing ? 'Scatto...' : 'Scatta'}</button>
+          <button type="button" onClick={takePhoto} disabled={capturing} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="useThis" size={14} />{capturing ? 'Scatto...' : buttonLabels.takePhoto}</button>
         )}
       </div>
     </div>

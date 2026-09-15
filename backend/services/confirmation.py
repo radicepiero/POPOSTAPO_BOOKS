@@ -250,6 +250,22 @@ def find_or_create_edition(
     return edition
 
 
+def link_contributors(edition_id: int, contributors: list[dict], source: str, db: Session) -> None:
+    for contributor in contributors:
+        name = (contributor.get("name") or "").strip()
+        role = (contributor.get("role") or "author").strip().lower()
+        if not name:
+            continue
+        author = find_or_create_author(name, source, db)
+        existing = (
+            db.query(EditionsAuthor)
+            .filter_by(edition_id=edition_id, author_id=author.id, role=role)
+            .first()
+        )
+        if not existing:
+            db.add(EditionsAuthor(edition_id=edition_id, author_id=author.id, role=role))
+
+
 def confirm_edition_from_candidate(candidate: dict, db: Session) -> Edition:
     title = candidate.get("title")
     if not title:
@@ -274,6 +290,8 @@ def confirm_edition_from_candidate(candidate: dict, db: Session) -> Edition:
         isbn10=candidate.get("isbn10"),
         isbn13=candidate.get("isbn13"),
     )
+    contributors = candidate.get("contributors") or []
+    link_contributors(edition.id, contributors, source, db)
     db.commit()
     db.refresh(edition)
     return edition
@@ -325,6 +343,8 @@ def confirm_edition_from_job(
         covers=edition_data.get("covers"),
         source_data=source_data,
     )
+    contributors = edition_data.get("contributors") or []
+    link_contributors(edition.id, contributors, source, db)
     db.commit()
     db.refresh(edition)
     return edition
@@ -419,6 +439,9 @@ def confirm_copy_from_job(
         ).first()
         if not existing:
             db.add(EditionsAuthor(edition_id=edition.id, author_id=author.id, role="author"))
+
+    contributors = edition_data.get("contributors") or []
+    link_contributors(edition.id, contributors, source, db)
 
     copy.edition_id = edition.id
     copy.status = "approved"
