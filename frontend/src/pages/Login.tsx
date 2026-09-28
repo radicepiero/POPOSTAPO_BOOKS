@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { setAuthToken } from '../api/client'
+import { Icon } from '../utils/icons'
 
 function Login() {
   const [token, setToken] = useState('')
@@ -22,7 +23,7 @@ function Login() {
           rows={6}
           placeholder="eyJhbGciOiJIUzI1NiIs..."
         />
-        <button type="submit">Salva token</button>
+        <button type="submit" aria-label="Salva token" title="Salva token" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="save" size={18} /></button>
       </form>
       {saved && <p style={{ color: 'green' }}>Token salvato.</p>}
     </div>

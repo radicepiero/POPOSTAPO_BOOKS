@@ -58,8 +58,8 @@ export default function BookmarkModal({ readingId, currentPage, totalPages, onCl
           <label>{formLabels.note}<textarea maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} /></label>
           {error && <div className="error">{error}</div>}
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-            <button type="button" onClick={onClose} style={{ flex: 1, background: '#555' }}>{buttonLabels.cancel}</button>
-            <button type="submit" disabled={loading} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}><Icon name="save" size={16} />{loading ? 'Salvataggio...' : buttonLabels.save}</button>
+            <button type="button" onClick={onClose} aria-label={buttonLabels.cancel} title={buttonLabels.cancel} style={{ flex: 1, background: '#555', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="cancel" size={18} /></button>
+            <button type="submit" disabled={loading} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}><Icon name="save" size={16} />{loading ? 'Salvataggio...' : ''}</button>
           </div>
         </form>
       </div>

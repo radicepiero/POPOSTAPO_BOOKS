@@ -1,13 +1,14 @@
 import json
 import logging
 import re
+import uuid as uuid_module
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from typing import Optional
 import requests
 from sqlalchemy import and_, func, or_, select, text, literal_column
 from ..database import SessionLocal
-from ..models import Author, CopyEnrichmentJob, Edition, EditionsAuthor, EditionsWork, Language, Publisher, Work, WorksAuthor
+from ..models import Author, Binding, Color, Copy, CopyEnrichmentJob, Edition, EditionVariant, EditionVariantImage, EditionsAuthor, EditionsWork, Language, Membre, Publisher, Reading, Series, Work, WorksAuthor
 from ..config import settings
 from ..services.ocr import extract_metadata_from_image
 
@@ -114,7 +115,91 @@ def _parse_google_volume(item: dict) -> dict:
     }
 
 
-def _local_edition_to_dict(edition: Edition, db) -> dict:
+_IMAGE_KIND_ORDER = {"front": 0, "back": 1, "spine": 2, "copyright": 3, "other": 4}
+
+
+def _variant_to_dict(variant: EditionVariant, db) -> dict:
+    series = db.query(Series).filter(Series.id == variant.series_id).first() if variant.series_id else None
+    binding_id = variant.binding_id or (series.default_binding_id if series else None)
+    binding = db.query(Binding).filter(Binding.id == binding_id).first() if binding_id else None
+    color_id = variant.color_id or (series.default_color_id if series else None)
+    color = db.query(Color).filter(Color.id == color_id).first() if color_id else None
+    images = (
+        db.query(EditionVariantImage)
+        .filter(EditionVariantImage.edition_variant_id == variant.id)
+        .order_by(EditionVariantImage.kind, EditionVariantImage.position, EditionVariantImage.id)
+        .all()
+    )
+    grouped_images: dict[str, list[dict]] = {}
+    for image in images:
+        grouped_images.setdefault(image.kind, []).append({
+            "id": image.id,
+            "url": image.url,
+            "position": image.position,
+            "is_primary": image.is_primary,
+        })
+    ordered_images = sorted(images, key=lambda image: (_IMAGE_KIND_ORDER.get(image.kind, 99), image.position, image.id))
+
+    return {
+        "id": variant.id,
+        "edition_id": variant.edition_id,
+        "label": variant.label,
+        "printing_year": variant.printing_year,
+        "printing_number": variant.printing_number,
+        "series_id": variant.series_id,
+        "series": series.name if series else None,
+        "series_number": variant.series_number,
+        "pages": variant.pages,
+        "binding_id": binding_id,
+        "binding": binding.name_ita or binding.name if binding else None,
+        "binding_source": "variant" if variant.binding_id else ("series" if series and series.default_binding_id else None),
+        "height_mm": variant.height_mm or (series.default_height_mm if series else None),
+        "height_source": "variant" if variant.height_mm else ("series" if series and series.default_height_mm else None),
+        "width_mm": variant.width_mm or (series.default_width_mm if series else None),
+        "width_source": "variant" if variant.width_mm else ("series" if series and series.default_width_mm else None),
+        "thickness_mm": variant.thickness_mm,
+        "weight_g": variant.weight_g,
+        "color_id": color_id,
+        "color": color.name if color else None,
+        "color_source": "variant" if variant.color_id else ("series" if series and series.default_color_id else None),
+        "format_note": variant.format_note or (series.default_format_note if series else None),
+        "format_note_source": "variant" if variant.format_note else ("series" if series and series.default_format_note else None),
+        "notes": variant.notes,
+        "is_default": variant.is_default,
+        "status": variant.status,
+        "source": variant.source,
+        "images": grouped_images,
+        "covers": [image.url for image in ordered_images],
+        "image_count": len(images),
+        "created_at": variant.created_at.isoformat() if variant.created_at else None,
+        "updated_at": variant.updated_at.isoformat() if variant.updated_at else None,
+    }
+
+
+def _edition_variants(edition_id: int, db) -> list[dict]:
+    variants = (
+        db.query(EditionVariant)
+        .filter(EditionVariant.edition_id == edition_id)
+        .order_by(EditionVariant.is_default.desc(), EditionVariant.id)
+        .all()
+    )
+    return [_variant_to_dict(variant, db) for variant in variants]
+
+
+def _edition_default_covers(edition: Edition, db) -> list[str]:
+    variant = (
+        db.query(EditionVariant)
+        .filter(EditionVariant.edition_id == edition.id, EditionVariant.is_default)
+        .first()
+    )
+    if variant:
+        covers = _variant_to_dict(variant, db)["covers"]
+        if covers:
+            return covers
+    return edition.covers or []
+
+
+def _local_edition_to_dict(edition: Edition, db, owner_uuid: Optional[str] = None) -> dict:
     publisher = db.query(Publisher).filter(Publisher.id == edition.publisher_id).first() if edition.publisher_id else None
     language = db.query(Language).filter(Language.id == edition.language_id).first() if edition.language_id else None
     # Find linked work(s) via editions_works
@@ -134,6 +219,8 @@ def _local_edition_to_dict(edition: Edition, db) -> dict:
         .all()
     )
     source_data = edition.source_data or {}
+    variants = _edition_variants(edition.id, db)
+    default_variant = next((variant for variant in variants if variant["is_default"]), variants[0] if variants else None)
 
     # Authors: raw column first, then source_data, then relational work authors
     authors = edition.authors or []
@@ -154,11 +241,94 @@ def _local_edition_to_dict(edition: Edition, db) -> dict:
         language_code = source_data.get("language")
     languages = [language_code] if language_code else []
 
-    # Covers / thumbnail
-    covers = edition.covers or []
+    # Covers / thumbnail come from the default variant, with legacy fields as fallback.
+    covers = (default_variant or {}).get("covers") or []
     if not covers:
-        covers = source_data.get("covers") or []
+        covers = edition.covers or source_data.get("covers") or []
     thumbnail = covers[0] if covers else source_data.get("thumbnail")
+
+    author_refs = [
+        {
+            "id": author.id,
+            "display_name": f"{author.given_name} {author.family_name}".strip(),
+            "role": role,
+        }
+        for author, role in work_authors
+    ]
+    contributor_refs = [
+        {
+            "id": author.id,
+            "display_name": f"{author.given_name} {author.family_name}".strip(),
+            "role": role,
+        }
+        for author, role in contributors
+    ]
+
+    related_editions = []
+    if work_id:
+        related = (
+            db.query(Edition)
+            .join(EditionsWork, EditionsWork.edition_id == Edition.id)
+            .filter(EditionsWork.work_id == work_id, Edition.id != edition.id)
+            .order_by(Edition.publishing_year, Edition.id)
+            .limit(3)
+            .all()
+        )
+        related_editions = [
+            {
+                "local_edition_id": item.id,
+                "title": item.title,
+                "subtitle": item.subtitle,
+                "year": item.publishing_year,
+                "isbn": item.isbn13 or item.isbn10,
+                "covers": _edition_default_covers(item, db),
+                "source": "postgresql",
+                "record_type": "edition",
+            }
+            for item in related
+        ]
+
+    user_state = None
+    if owner_uuid:
+        owner = uuid_module.UUID(owner_uuid)
+        membre = db.query(Membre).filter_by(uuid=owner).first()
+        copies_count = db.query(Copy).filter_by(edition_id=edition.id, owner_uuid=owner).count()
+        reading_query = db.query(Reading).filter(Reading.edition_id == edition.id)
+        if membre:
+            reading_query = reading_query.filter(
+                or_(Reading.owner_uuid == owner, Reading.owner_membre_id == membre.id)
+            )
+        else:
+            reading_query = reading_query.filter(Reading.owner_uuid == owner)
+        reading = reading_query.order_by(Reading.id.desc()).first()
+        user_state = {
+            "copies_count": copies_count,
+            "reading_status": reading.status if reading else None,
+            "reading_start_date": str(reading.start_date) if reading and reading.start_date else None,
+            "reading_end_date": str(reading.end_date) if reading and reading.end_date else None,
+            "rating": float(reading.rating) if reading and reading.rating is not None else None,
+        }
+
+    work_data = None
+    if work:
+        work_language = (
+            db.query(Language).filter(Language.id == work.original_language_id).first()
+            if work.original_language_id else None
+        )
+        work_data = {
+            "id": work.id,
+            "original_title": work.original_title,
+            "original_subtitle": work.original_subtitle,
+            "language": work_language.name if work_language else None,
+            "date": {
+                "year": work.publishing_year,
+                "era": work.publishing_era,
+                "type": "publication",
+            } if work.publishing_year else None,
+            "authors": author_refs,
+            "related_editions": related_editions,
+            "related_editions_count": db.query(EditionsWork).filter_by(work_id=work.id).count() - 1,
+        }
 
     return {
         "source": "postgresql",
@@ -171,16 +341,21 @@ def _local_edition_to_dict(edition: Edition, db) -> dict:
         "publisher": publisher_name,
         "publish_date": str(edition.publishing_year) if edition.publishing_year else None,
         "year": edition.publishing_year,
-        "pages": edition.pages,
+        "pages": (default_variant or {}).get("pages") or edition.pages,
+        "default_variant_id": (default_variant or {}).get("id"),
+        "variants": variants,
         "authors": authors,
+        "author_refs": author_refs,
         "contributors": [
-            {"name": f"{author.given_name} {author.family_name}".strip(), "role": role}
-            for author, role in contributors
+            {"name": item["display_name"], "id": item["id"], "role": item["role"]}
+            for item in contributor_refs
         ],
+        "work": work_data,
+        "user_state": user_state,
         "language": language_code,
         "languages": languages,
         "covers": covers,
-        "images": source_data.get("images") or {},
+        "images": (default_variant or {}).get("images") or source_data.get("images") or {},
         "thumbnail": thumbnail,
         "isbn": edition.isbn13 or edition.isbn10,
         "average_rating": source_data.get("average_rating"),
@@ -200,7 +375,7 @@ def _local_edition_to_dict(edition: Edition, db) -> dict:
     }
 
 
-def lookup_local_editions_advanced(isbn: str = "", title: Optional[str] = None, author: Optional[str] = None) -> dict:
+def lookup_local_editions_advanced(isbn: str = "", title: Optional[str] = None, author: Optional[str] = None, owner_uuid: Optional[str] = None) -> dict:
     """Field-specific search: each non-empty field adds an AND filter."""
     from ..models import EditionsWork, WorksAuthor, Author as AuthorModel
     db = SessionLocal()
@@ -255,13 +430,13 @@ def lookup_local_editions_advanced(isbn: str = "", title: Optional[str] = None, 
         return {
             "found": True,
             "source": "postgresql",
-            "candidates": [_local_edition_to_dict(edition, db) for edition in editions],
+            "candidates": [_local_edition_to_dict(edition, db, owner_uuid) for edition in editions],
         }
     finally:
         db.close()
 
 
-def lookup_local_editions(isbn: str = "", title: Optional[str] = None, author: Optional[str] = None) -> dict:
+def lookup_local_editions(isbn: str = "", title: Optional[str] = None, author: Optional[str] = None, owner_uuid: Optional[str] = None) -> dict:
     db = SessionLocal()
     try:
         normalized_isbn = re.sub(r"[^0-9X]", "", isbn.upper()) if isbn else ""
@@ -317,7 +492,7 @@ def lookup_local_editions(isbn: str = "", title: Optional[str] = None, author: O
         return {
             "found": True,
             "source": "postgresql",
-            "candidates": [_local_edition_to_dict(edition, db) for edition in editions],
+            "candidates": [_local_edition_to_dict(edition, db, owner_uuid) for edition in editions],
         }
     finally:
         db.close()

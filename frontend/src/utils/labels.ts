@@ -3,6 +3,7 @@ export const sourceLabels: Record<string, string> = {
   open_library: 'Open Library',
   google_books: 'Google Books',
   openai_vision: 'Foto copertina',
+  manual: 'Inserimento manuale',
 }
 
 export const imageRoleLabels: Record<string, string> = {
@@ -69,6 +70,8 @@ export const formLabels = {
   shelf: 'Scaffale',
   conditionNote: 'Condizioni e note',
   fromFriend: 'Da chi',
+  startDate: 'Data di inizio lettura',
+  endDate: 'Data di fine lettura',
   page: 'Pagina',
   bookmarkDate: 'Data',
   note: 'Nota',
@@ -126,4 +129,11 @@ export const scanLabels = {
   proceedBack: 'Procedi senza foto del retro.',
   proceedSpine: 'Procedi senza foto del fianco.',
   proceedCopyright: 'Procedi senza pagina interna.',
+}
+
+export const authorLabels = {
+  title: 'Autori',
+  searchPlaceholder: 'Cerca autore...',
+  noResults: 'Nessun autore trovato.',
+  fromEdition: 'da edizione non normalizzata',
 }

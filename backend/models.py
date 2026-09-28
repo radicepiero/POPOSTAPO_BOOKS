@@ -2,8 +2,8 @@ import uuid as _uuid
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
-from sqlalchemy import func, ForeignKey, String, Integer, Boolean, Date, DateTime, Text, Numeric, ARRAY, BigInteger
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TSVECTOR
+from sqlalchemy import func, ForeignKey, ForeignKeyConstraint, String, Integer, Boolean, Date, DateTime, Text, Numeric, ARRAY, BigInteger
+from sqlalchemy.dialects.postgresql import UUID, JSONB, TSVECTOR, ENUM
 from sqlalchemy.orm import Mapped, mapped_column
 from .database import Base
 
@@ -166,6 +166,11 @@ class Series(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     publisher_id: Mapped[Optional[int]] = mapped_column(ForeignKey("publishers.id"), nullable=True)
     name: Mapped[str] = mapped_column(String(255))
+    default_binding_id: Mapped[Optional[int]] = mapped_column(ForeignKey("bindings.id"), nullable=True)
+    default_height_mm: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    default_width_mm: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    default_color_id: Mapped[Optional[int]] = mapped_column(ForeignKey("colors.id"), nullable=True)
+    default_format_note: Mapped[Optional[str]] = mapped_column(String(250), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -305,6 +310,45 @@ class EditionEdition(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class EditionVariant(Base):
+    __tablename__ = "edition_variants"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    edition_id: Mapped[int] = mapped_column(ForeignKey("editions.id"))
+    label: Mapped[str] = mapped_column(String(255), default="Variante principale")
+    printing_year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    printing_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    series_id: Mapped[Optional[int]] = mapped_column(ForeignKey("series.id"), nullable=True)
+    series_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    pages: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    binding_id: Mapped[Optional[int]] = mapped_column(ForeignKey("bindings.id"), nullable=True)
+    height_mm: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    width_mm: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    thickness_mm: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    weight_g: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    color_id: Mapped[Optional[int]] = mapped_column(ForeignKey("colors.id"), nullable=True)
+    format_note: Mapped[Optional[str]] = mapped_column(String(250), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    status: Mapped[str] = mapped_column(ENUM("draft", "proposed", "approved", "rejected", "merged", name="entity_status", create_type=False), default="proposed")
+    source: Mapped[Optional[str]] = mapped_column(ENUM("manual", "open_library", "google_books", "isbn_db", "ollama", "openai", "claude", name="data_source", create_type=False), nullable=True)
+    created_by_uuid: Mapped[Optional[_uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class EditionVariantImage(Base):
+    __tablename__ = "edition_variant_images"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    edition_variant_id: Mapped[int] = mapped_column(ForeignKey("edition_variants.id", ondelete="CASCADE"))
+    kind: Mapped[str] = mapped_column(String(30))
+    url: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
+    source: Mapped[Optional[str]] = mapped_column(ENUM("manual", "open_library", "google_books", "isbn_db", "ollama", "openai", "claude", name="data_source", create_type=False), nullable=True)
+    created_by_uuid: Mapped[Optional[_uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class EditionMeasurement(Base):
     __tablename__ = "edition_measurements"
     edition_id: Mapped[int] = mapped_column(ForeignKey("editions.id"), primary_key=True)
@@ -427,6 +471,7 @@ class Copy(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     owner_uuid: Mapped[Optional[_uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
     edition_id: Mapped[Optional[int]] = mapped_column(ForeignKey("editions.id"), nullable=True)
+    edition_variant_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     shelf_id: Mapped[Optional[int]] = mapped_column(ForeignKey("shelves.id"), nullable=True)
     barcode: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     acquisition_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
@@ -446,6 +491,14 @@ class Copy(Base):
     source: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["edition_variant_id", "edition_id"],
+            ["edition_variants.id", "edition_variants.edition_id"],
+            name="fk_copies_variant_edition",
+        ),
+    )
 
 
 # ============================================================
@@ -485,6 +538,7 @@ class Reading(Base):
     owner_uuid: Mapped[Optional[_uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
     owner_membre_id: Mapped[Optional[int]] = mapped_column(ForeignKey("membres.id"), nullable=True)
     edition_id: Mapped[int] = mapped_column(ForeignKey("editions.id"))
+    edition_variant_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     copy_id: Mapped[Optional[int]] = mapped_column(ForeignKey("copies.id"), nullable=True)
     friend_id: Mapped[Optional[int]] = mapped_column(ForeignKey("friends.id"), nullable=True)
     start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
@@ -496,6 +550,28 @@ class Reading(Base):
     rating: Mapped[Optional[Decimal]] = mapped_column(Numeric(4, 2), nullable=True)
     is_shared: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["edition_variant_id", "edition_id"],
+            ["edition_variants.id", "edition_variants.edition_id"],
+            name="fk_readings_variant_edition",
+        ),
+    )
+
+
+class WishlistItem(Base):
+    __tablename__ = "wishlist_items"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_uuid: Mapped[_uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    work_id: Mapped[Optional[int]] = mapped_column(ForeignKey("works.id"), nullable=True)
+    title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    author: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    fulfilled_reading_id: Mapped[Optional[int]] = mapped_column(ForeignKey("readings.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class Bookmark(Base):

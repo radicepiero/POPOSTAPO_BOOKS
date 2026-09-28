@@ -1,6 +1,7 @@
 from typing import Optional
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from sqlalchemy.orm import Session
-from ..models import Author, AuthorRole, Publisher, Work, Edition, Copy, CopyEnrichmentJob, WorksAuthor, EditionsAuthor, EditionsWork
+from ..models import Author, AuthorRole, Publisher, Work, Edition, EditionVariant, EditionVariantImage, Copy, CopyEnrichmentJob, WorksAuthor, EditionsAuthor, EditionsWork
 
 
 # ---------------------------------------------------------------------------
@@ -136,6 +137,71 @@ def _fill_missing(edition: Edition, **kwargs) -> bool:
     return changed
 
 
+def _image_identity(url: str) -> str:
+    parts = urlsplit(url)
+    query = urlencode([(key, value) for key, value in parse_qsl(parts.query) if key != "zoom"])
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, query, parts.fragment))
+
+
+def _ensure_default_variant(edition: Edition, db: Session, covers: Optional[list[str]] = None, source_data: Optional[dict] = None, source: str = "manual") -> EditionVariant:
+    variant = db.query(EditionVariant).filter_by(edition_id=edition.id, is_default=True).first()
+    if variant:
+        return variant
+    variant = EditionVariant(
+        edition_id=edition.id,
+        label="Variante principale",
+        pages=edition.pages,
+        status=edition.status,
+        source=source,
+        is_default=True,
+    )
+    db.add(variant)
+    db.flush()
+
+    merged_source_data = {**(edition.source_data or {}), **(source_data or {})}
+    images = merged_source_data.get("images") or {}
+    position_by_kind: dict[str, int] = {}
+    image_identities: set[str] = set()
+    if isinstance(images, dict):
+        for key, url in images.items():
+            if not url or _image_identity(url) in image_identities:
+                continue
+            image_identities.add(_image_identity(url))
+            normalized = str(key).lower()
+            kind = (
+                "front" if normalized == "front cover"
+                else "back" if normalized == "back cover"
+                else "spine" if normalized == "spine"
+                else "copyright" if normalized.startswith("copyright")
+                else "other"
+            )
+            position = position_by_kind.get(kind, 0)
+            position_by_kind[kind] = position + 1
+            db.add(EditionVariantImage(
+                edition_variant_id=variant.id,
+                kind=kind,
+                url=url,
+                position=position,
+                is_primary=kind == "front" and position == 0,
+                source=source,
+            ))
+
+    for position, url in enumerate(covers or edition.covers or []):
+        if not url or _image_identity(url) in image_identities:
+            continue
+        image_identities.add(_image_identity(url))
+        kind = "front" if position == 0 and "front" not in position_by_kind else "other"
+        db.add(EditionVariantImage(
+            edition_variant_id=variant.id,
+            kind=kind,
+            url=url,
+            position=position,
+            is_primary=kind == "front",
+            source=source,
+        ))
+    db.flush()
+    return variant
+
 
 def _editions_match(edition: Edition, title: str, subtitle: Optional[str],
                      year: Optional[int], pages: Optional[int],
@@ -205,6 +271,7 @@ def find_or_create_edition(
             isbn13=resolved_isbn13,
             isbn10=resolved_isbn10,
         )
+        _ensure_default_variant(edition, db, covers=covers, source_data=source_data, source=source)
         db.flush()
         return edition
 
@@ -227,6 +294,7 @@ def find_or_create_edition(
                     covers=covers,
                     source_data=source_data,
                 )
+                _ensure_default_variant(candidate, db, covers=covers, source_data=source_data, source=source)
                 db.flush()
                 return candidate
 
@@ -247,6 +315,7 @@ def find_or_create_edition(
     )
     db.add(edition)
     db.flush()
+    _ensure_default_variant(edition, db, covers=covers, source_data=source_data, source=source)
     return edition
 
 
@@ -397,6 +466,8 @@ def confirm_copy_from_job(
         if not edition:
             raise ValueError("Local edition not found")
         copy.edition_id = edition.id
+        variant = db.query(EditionVariant).filter_by(edition_id=edition.id, is_default=True).first()
+        copy.edition_variant_id = variant.id if variant else None
         copy.status = "approved"
         db.commit()
         db.refresh(copy)
@@ -444,6 +515,8 @@ def confirm_copy_from_job(
     link_contributors(edition.id, contributors, source, db)
 
     copy.edition_id = edition.id
+    variant = db.query(EditionVariant).filter_by(edition_id=edition.id, is_default=True).first()
+    copy.edition_variant_id = variant.id if variant else None
     copy.status = "approved"
     db.commit()
     db.refresh(copy)

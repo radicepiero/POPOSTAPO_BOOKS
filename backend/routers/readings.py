@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..auth import get_current_user_uuid
 from ..database import get_db
-from ..models import Bookmark, Edition, Membre, Reading
+from ..models import Bookmark, Edition, EditionVariant, Membre, Reading
 from ..schemas import BookmarkCreate, ReadingStatusUpdate
 
 
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/readings", tags=["readings"])
 
 @router.get("")
 def list_readings(
-    status: Literal["all", "active", "inactive", "wishlist", "finished", "abandoned"] = "all",
+    status: Literal["all", "active", "inactive", "finished", "abandoned"] = "all",
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -28,7 +28,6 @@ def list_readings(
         "all": "TRUE",
         "active": "r.status = 'active'",
         "inactive": f"r.status = 'active' AND {last_activity_sql} > DATE '0001-01-01' AND {last_activity_sql} < CURRENT_DATE - INTERVAL '60 days'",
-        "wishlist": "r.status = 'wishlist'",
         "abandoned": "r.status = 'abandoned'",
         "finished": "r.status = 'finished'",
     }[status]
@@ -36,6 +35,7 @@ def list_readings(
         SELECT
             r.id AS reading_id,
             r.edition_id,
+            r.edition_variant_id,
             r.copy_id,
             r.start_date,
             r.end_date,
@@ -48,8 +48,14 @@ def list_readings(
             r.is_shared,
             e.title,
             e.subtitle,
-            e.pages,
-            e.covers,
+            ev.label AS variant_label,
+            COALESCE(ev.pages, e.pages) AS pages,
+            COALESCE(
+                (SELECT array_agg(evi.url ORDER BY evi.position, evi.id)
+                   FROM edition_variant_images evi
+                  WHERE evi.edition_variant_id = ev.id AND evi.kind = 'front'),
+                e.covers
+            ) AS covers,
             p.name AS publisher,
             COALESCE(
                 NULLIF(e.authors, ARRAY[]::text[]),
@@ -64,6 +70,7 @@ def list_readings(
             lb.last_note
         FROM readings r
         JOIN editions e ON e.id = r.edition_id
+        LEFT JOIN edition_variants ev ON ev.id = r.edition_variant_id
         LEFT JOIN publishers p ON p.id = e.publisher_id
         LEFT JOIN LATERAL (
             SELECT array_agg(DISTINCT concat_ws(' ', a.given_name, a.family_name)) AS authors
@@ -87,14 +94,11 @@ def list_readings(
             OR r.owner_membre_id = (SELECT id FROM membres WHERE uuid = :owner_uuid LIMIT 1)
         )
           AND {status_sql}
-        ORDER BY CASE
-            WHEN r.status = 'wishlist' THEN r.created_at::date
-            ELSE GREATEST(
-                COALESCE(lb.last_activity, DATE '0001-01-01'),
-                COALESCE(r.end_date, DATE '0001-01-01'),
-                COALESCE(r.start_date, DATE '0001-01-01')
-            )
-        END DESC,
+        ORDER BY GREATEST(
+            COALESCE(lb.last_activity, DATE '0001-01-01'),
+            COALESCE(r.end_date, DATE '0001-01-01'),
+            COALESCE(r.start_date, DATE '0001-01-01')
+        ) DESC,
         r.id DESC
         LIMIT :limit OFFSET :offset
     """)
@@ -113,7 +117,7 @@ def update_reading_status(
     db: Session = Depends(get_db),
     owner_uuid: str = Depends(get_current_user_uuid),
 ):
-    if data.status not in {"active", "wishlist", "finished", "abandoned"}:
+    if data.status not in {"active", "finished", "abandoned"}:
         raise HTTPException(status_code=400, detail="Invalid reading status")
     owner = UUID(owner_uuid)
     membre = db.query(Membre).filter_by(uuid=owner).first()
@@ -172,7 +176,9 @@ def add_bookmark(
         reading.current_page = data.page
 
     edition = db.query(Edition).filter(Edition.id == reading.edition_id).first() if reading.edition_id else None
-    if edition and edition.pages and edition.pages > 0 and data.page >= edition.pages:
+    variant = db.query(EditionVariant).filter(EditionVariant.id == reading.edition_variant_id).first() if reading.edition_variant_id else None
+    total_pages = variant.pages if variant and variant.pages else edition.pages if edition else None
+    if total_pages and total_pages > 0 and data.page >= total_pages:
         reading.status = "finished"
         reading.finished = True
         if not reading.end_date:

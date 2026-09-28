@@ -1,10 +1,71 @@
 export interface Contributor {
+  id?: number
   name: string
   role?: string
 }
 
+export interface AuthorReference {
+  id?: number
+  display_name: string
+  role?: string
+}
+
+export interface EditionUserState {
+  copies_count: number
+  reading_status?: string | null
+  reading_start_date?: string | null
+  reading_end_date?: string | null
+  rating?: number | null
+}
+
+export interface WorkSummary {
+  id: number
+  original_title: string
+  original_subtitle?: string | null
+  date?: { year?: number; era?: number; type?: string } | null
+  language?: string | null
+  authors: AuthorReference[]
+  related_editions?: Candidate[]
+  related_editions_count?: number
+}
+
+export interface EditionVariantImage {
+  id: number
+  url: string
+  kind: 'front' | 'back' | 'spine' | 'copyright' | 'other'
+  position: number
+  is_primary: boolean
+}
+
+export interface EditionVariant {
+  id: number
+  edition_id: number
+  label?: string
+  printing_year?: number | null
+  printing_number?: string | null
+  series?: string | null
+  series_number?: number | null
+  pages?: number | null
+  binding?: string | null
+  binding_source?: 'variant' | 'series' | null
+  height_mm?: number | null
+  height_source?: 'variant' | 'series' | null
+  width_mm?: number | null
+  width_source?: 'variant' | 'series' | null
+  thickness_mm?: number | null
+  weight_g?: number | null
+  color?: string | null
+  color_source?: 'variant' | 'series' | null
+  format_note?: string | null
+  format_note_source?: 'variant' | 'series' | null
+  notes?: string | null
+  is_default: boolean
+  images?: Record<string, EditionVariantImage[]>
+  covers?: string[]
+}
+
 export interface Candidate {
-  source: 'google_books' | 'open_library' | 'postgresql' | 'openai_vision'
+  source: 'google_books' | 'open_library' | 'postgresql' | 'openai_vision' | 'manual'
   record_type: 'volume' | 'edition'
   external_id?: string
   local_edition_id?: number
@@ -14,7 +75,10 @@ export interface Candidate {
   edition_name?: string[]
 
   authors?: string[]
+  author_refs?: AuthorReference[]
   contributors?: Contributor[]
+  work?: WorkSummary | null
+  user_state?: EditionUserState | null
   translators?: string[]
   illustrators?: string[]
   editors?: string[]
@@ -36,11 +100,13 @@ export interface Candidate {
   other_identifiers?: Record<string, string | string[]>
 
   pages?: number
+  default_variant_id?: number | null
+  variants?: EditionVariant[]
   language?: string
 
   series?: string[]
   covers?: string[]
-  images?: Record<string, string>
+  images?: Record<string, string | EditionVariantImage[]>
   thumbnail?: string
   preview_url?: string
   info_url?: string
@@ -90,12 +156,11 @@ function normalizeCoverUrl(url: string | undefined): string | undefined {
 
 function collectGoogleCovers(imageLinks: Record<string, string> | undefined): string[] {
   if (!imageLinks) return []
-  const covers: string[] = []
   for (const size of ['extraLarge', 'large', 'medium', 'small', 'thumbnail', 'smallThumbnail']) {
-    const url = imageLinks[size]
-    if (url) covers.push(normalizeCoverUrl(url) as string)
+    const url = normalizeCoverUrl(imageLinks[size])
+    if (url) return [url]
   }
-  return covers
+  return []
 }
 
 function parseIsbns(values: string[]): { isbn?: string; isbn10?: string; isbn13?: string } {

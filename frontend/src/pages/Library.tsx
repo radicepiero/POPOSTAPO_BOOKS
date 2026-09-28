@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import client from '../api/client'
 import { db } from '../db'
 import CopyFormModal from '../components/CopyFormModal'
@@ -9,6 +9,8 @@ import { Icon } from '../utils/icons'
 interface CopyItem {
   copy_id: number
   edition_id: number | null
+  edition_variant_id?: number | null
+  variant_label?: string | null
   work_id: number | null
   status: string
   title?: string
@@ -34,6 +36,8 @@ function formatDate(value?: string) {
 
 function Library() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editionId = Number(searchParams.get('edition_id'))
   const [copies, setCopies] = useState<CopyItem[]>([])
   const [pending, setPending] = useState<any[]>([])
   const [editingCopy, setEditingCopy] = useState<CopyItem | null>(null)
@@ -88,6 +92,10 @@ function Library() {
     }
   }
 
+  const displayedCopies = Number.isInteger(editionId) && editionId > 0
+    ? copies.filter((copy) => copy.edition_id === editionId)
+    : copies
+
   return (
     <div>
       <h2>{libraryLabels.title}</h2>
@@ -104,7 +112,7 @@ function Library() {
         </>
       )}
       <h3>{libraryLabels.confirmed}</h3>
-      {copies.map((c) => (
+      {displayedCopies.map((c) => (
         <div className="card" key={c.copy_id} style={{ marginBottom: '0.75rem' }}>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             {c.covers?.[0] ? (
@@ -122,7 +130,7 @@ function Library() {
               <p style={{ margin: '0 0 0.25rem', fontWeight: 600 }}><Link to={`/editions/${c.edition_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{c.title || 'Titolo sconosciuto'}</Link></p>
               {c.author && <p style={{ margin: '0 0 0.35rem', color: '#555' }}>{c.author}</p>}
               <p style={{ margin: '0', color: '#666', fontSize: '0.85rem' }}>
-                {c.publisher}{c.publisher && c.pages ? ' · ' : ''}{c.pages ? `${c.pages} pp.` : ''}
+                {c.publisher}{c.publisher && c.pages ? ' · ' : ''}{c.pages ? `${c.pages} pp.` : ''}{c.variant_label ? ` · ${c.variant_label}` : ''}
               </p>
               {c.acquisition_type_name && (
                 <p style={{ margin: '0.25rem 0 0', color: '#666', fontSize: '0.8rem' }}>
@@ -174,7 +182,7 @@ function Library() {
           </div>
         </div>
       ))}
-      {copies.length === 0 && !error && <p>{libraryLabels.empty}</p>}
+      {displayedCopies.length === 0 && !error && <p>{libraryLabels.empty}</p>}
 
       {editingCopy && (
         <CopyFormModal

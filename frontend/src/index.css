@@ -25,6 +25,24 @@ main {
   overflow-y: auto;
 }
 
+.back-button {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 20;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0.5rem 0 -0.25rem 0.75rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
 .bottom-nav {
   position: sticky;
   bottom: 0;
@@ -39,6 +57,16 @@ main {
   text-decoration: none;
   color: #333;
   font-weight: 500;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.bottom-nav a:hover {
+  background: #f0f0f0;
 }
 
 button, .btn {
@@ -95,6 +123,15 @@ input, textarea {
   background: #f3f4f6;
   color: #555;
   font-size: 0.9rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1.2s linear infinite;
 }
 
 .error {

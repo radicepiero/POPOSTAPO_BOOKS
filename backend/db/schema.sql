@@ -145,6 +145,11 @@ CREATE TABLE series (
   id SERIAL PRIMARY KEY,
   publisher_id INT REFERENCES publishers(id),
   name VARCHAR(255) NOT NULL,
+  default_binding_id INT REFERENCES bindings(id),
+  default_height_mm INT,
+  default_width_mm INT,
+  default_color_id INT REFERENCES colors(id),
+  default_format_note VARCHAR(250),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -286,6 +291,49 @@ CREATE TABLE edition_editions (
 );
 
 -- Additional measurements for editions
+-- Physical variants of an edition
+CREATE TABLE edition_variants (
+  id SERIAL PRIMARY KEY,
+  edition_id INT NOT NULL REFERENCES editions(id),
+  label VARCHAR(255) NOT NULL DEFAULT 'Variante principale',
+  printing_year INT,
+  printing_number VARCHAR(50),
+  series_id INT REFERENCES series(id),
+  series_number INT,
+  pages INT,
+  binding_id INT REFERENCES bindings(id),
+  height_mm INT,
+  width_mm INT,
+  thickness_mm INT,
+  weight_g INT,
+  color_id INT REFERENCES colors(id),
+  format_note VARCHAR(250),
+  notes TEXT,
+  is_default BOOLEAN NOT NULL DEFAULT false,
+  status entity_status NOT NULL DEFAULT 'proposed',
+  source data_source,
+  created_by_uuid UUID,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (id, edition_id)
+);
+
+CREATE UNIQUE INDEX uq_edition_variants_default
+  ON edition_variants (edition_id)
+  WHERE is_default;
+
+CREATE TABLE edition_variant_images (
+  id SERIAL PRIMARY KEY,
+  edition_variant_id INT NOT NULL REFERENCES edition_variants(id) ON DELETE CASCADE,
+  kind VARCHAR(30) NOT NULL CHECK (kind IN ('front', 'back', 'spine', 'copyright', 'other')),
+  url TEXT NOT NULL,
+  position INT NOT NULL DEFAULT 0,
+  is_primary BOOLEAN NOT NULL DEFAULT false,
+  source data_source,
+  created_by_uuid UUID,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE edition_measurements (
   edition_id INT NOT NULL REFERENCES editions(id),
   unit_id VARCHAR(50) NOT NULL REFERENCES measurement_units(id),
@@ -405,6 +453,7 @@ CREATE TABLE copies (
   id SERIAL PRIMARY KEY,
   owner_uuid UUID,
   edition_id INT REFERENCES editions(id),
+  edition_variant_id INT,
   shelf_id INT REFERENCES shelves(id),
   barcode BIGINT,
   acquisition_date DATE,
@@ -425,6 +474,11 @@ CREATE TABLE copies (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE copies
+  ADD CONSTRAINT fk_copies_variant_edition
+  FOREIGN KEY (edition_variant_id, edition_id)
+  REFERENCES edition_variants (id, edition_id);
 
 -- ============================================================
 -- Transactions (buy, sell, lend, borrow)
@@ -460,6 +514,7 @@ CREATE TABLE readings (
   owner_uuid UUID,
   owner_membre_id INT REFERENCES membres(id),
   edition_id INT NOT NULL REFERENCES editions(id),
+  edition_variant_id INT,
   copy_id INT REFERENCES copies(id),
   friend_id INT REFERENCES friends(id),  -- who recommended
   start_date DATE,
@@ -471,6 +526,27 @@ CREATE TABLE readings (
   rating DECIMAL(4,2),
   is_shared BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE readings
+  ADD CONSTRAINT fk_readings_variant_edition
+  FOREIGN KEY (edition_variant_id, edition_id)
+  REFERENCES edition_variants (id, edition_id);
+
+-- Simple intention to read a work; converted to a reading when a concrete
+-- variant or copy is chosen.
+CREATE TABLE wishlist_items (
+  id SERIAL PRIMARY KEY,
+  owner_uuid UUID NOT NULL,
+  work_id INT REFERENCES works(id),
+  title VARCHAR(255),
+  author VARCHAR(255),
+  note TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active', 'fulfilled', 'abandoned')),
+  fulfilled_reading_id INT REFERENCES readings(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE bookmarks (
@@ -677,8 +753,15 @@ CREATE INDEX IF NOT EXISTS idx_editions_search_vector ON editions USING GIN (sea
 CREATE INDEX IF NOT EXISTS idx_authors_family_name ON authors (family_name);
 CREATE INDEX IF NOT EXISTS idx_authors_given_name ON authors (given_name);
 CREATE INDEX IF NOT EXISTS idx_works_title ON works (original_title);
+CREATE INDEX IF NOT EXISTS idx_edition_variants_edition ON edition_variants (edition_id);
+CREATE INDEX IF NOT EXISTS idx_edition_variants_series ON edition_variants (series_id);
+CREATE INDEX IF NOT EXISTS idx_edition_variant_images_variant ON edition_variant_images (edition_variant_id, kind, position);
 CREATE INDEX IF NOT EXISTS idx_copies_owner ON copies (owner_uuid);
+CREATE INDEX IF NOT EXISTS idx_copies_variant ON copies (edition_variant_id);
 CREATE INDEX IF NOT EXISTS idx_readings_owner ON readings (owner_uuid);
+CREATE INDEX IF NOT EXISTS idx_readings_variant ON readings (edition_variant_id);
+CREATE INDEX IF NOT EXISTS idx_wishlist_items_owner ON wishlist_items (owner_uuid, status);
+CREATE INDEX IF NOT EXISTS idx_wishlist_items_work ON wishlist_items (work_id);
 CREATE INDEX IF NOT EXISTS idx_readings_owner_membre ON readings (owner_membre_id);
 CREATE INDEX IF NOT EXISTS idx_readings_edition ON readings (edition_id);
 

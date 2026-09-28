@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from .config import settings
 from .database import engine
 from .models import Base
-from .routers import authors, copies, editions, readings
+from .routers import authors, copies, editions, readings, variants, wishlist, works
 
 
 Base.metadata.create_all(bind=engine)
@@ -28,6 +28,9 @@ app.include_router(authors.router, prefix="/api")
 app.include_router(copies.router, prefix="/api")
 app.include_router(editions.router, prefix="/api")
 app.include_router(readings.router, prefix="/api")
+app.include_router(variants.router, prefix="/api")
+app.include_router(wishlist.router, prefix="/api")
+app.include_router(works.router, prefix="/api")
 
 
 @app.get("/health")

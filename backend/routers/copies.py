@@ -8,9 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, Fo
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..auth import get_current_user_uuid
-from ..models import AcquisitionType, Author, Copy, CopyEnrichmentJob, Edition, EditionsWork, Friend, Library, Membre, Publisher, Reading, Shelf, Work, WorksAuthor
+from ..models import AcquisitionType, Author, Copy, CopyEnrichmentJob, Edition, EditionVariant, EditionsWork, Friend, Library, Membre, Publisher, Reading, Shelf, Work, WorksAuthor
+from ..routers.editions import _ensure_edition_creator, _resolve_edition_variant
 from ..schemas import CopyDraftCreate, CopyDraftResponse, EnrichmentJobResponse, CopyConfirm, CopyConfirmResponse, CopyListItem, CopyUpdate
-from ..services.enrichment import process_enrichment_job
+from ..services.enrichment import process_enrichment_job, _variant_to_dict
 from ..services.confirmation import confirm_copy_from_job
 from ..services.barcode import decode_barcode_image
 
@@ -165,6 +166,9 @@ def confirm_copy(
         confirmed.acquisition_date = data.acquisition_date
         confirmed.price = data.price
         confirmed.condition_note = data.condition_note
+        if confirmed.edition_id:
+            confirmed.edition_variant_id = _resolve_edition_variant(db, confirmed.edition_id, data.edition_variant_id).id
+            _ensure_edition_creator(db, confirmed.edition_id, owner_uuid)
         db.commit()
         db.refresh(confirmed)
     except ValueError as exc:
@@ -270,6 +274,8 @@ def list_copies(
         elif edition.authors:
             author_name = edition.authors[0]
         publisher = db.query(Publisher).filter_by(id=edition.publisher_id).first() if edition.publisher_id else None
+        variant = db.query(EditionVariant).filter_by(id=copy.edition_variant_id).first() if copy.edition_variant_id else None
+        variant_data = _variant_to_dict(variant, db) if variant else None
         shelf = db.query(Shelf).filter_by(id=copy.shelf_id).first() if copy.shelf_id else None
         library = db.query(Library).filter_by(id=shelf.library_id).first() if shelf else None
         acq_type = db.query(AcquisitionType).filter_by(id=copy.acquisition_type_id).first() if copy.acquisition_type_id else None
@@ -283,12 +289,14 @@ def list_copies(
         results.append({
             "copy_id": copy.id,
             "edition_id": edition.id,
+            "edition_variant_id": copy.edition_variant_id,
+            "variant_label": variant_data["label"] if variant_data else None,
             "status": copy.status,
             "title": edition.title,
             "author": author_name,
-            "covers": edition.covers,
+            "covers": (variant_data or {}).get("covers") or edition.covers,
             "publisher": publisher.name if publisher else None,
-            "pages": edition.pages,
+            "pages": variant.pages if variant and variant.pages else edition.pages,
             "acquisition_date": copy.acquisition_date,
             "acquisition_type_name": acq_type.name_ita or acq_type.name if acq_type else None,
             "shelf_name": shelf.name if shelf else None,
@@ -336,6 +344,8 @@ def _copy_to_list_item(copy: Copy, db: Session) -> dict:
     elif edition.authors:
         author_name = edition.authors[0]
     publisher = db.query(Publisher).filter_by(id=edition.publisher_id).first() if edition.publisher_id else None
+    variant = db.query(EditionVariant).filter_by(id=copy.edition_variant_id).first() if copy.edition_variant_id else None
+    variant_data = _variant_to_dict(variant, db) if variant else None
     shelf = db.query(Shelf).filter_by(id=copy.shelf_id).first() if copy.shelf_id else None
     library = db.query(Library).filter_by(id=shelf.library_id).first() if shelf else None
     acq_type = db.query(AcquisitionType).filter_by(id=copy.acquisition_type_id).first() if copy.acquisition_type_id else None
@@ -349,12 +359,14 @@ def _copy_to_list_item(copy: Copy, db: Session) -> dict:
     return {
         "copy_id": copy.id,
         "edition_id": edition.id,
+        "edition_variant_id": copy.edition_variant_id,
+        "variant_label": variant_data["label"] if variant_data else None,
         "status": copy.status,
         "title": edition.title,
         "author": author_name,
-        "covers": edition.covers,
+        "covers": (variant_data or {}).get("covers") or edition.covers,
         "publisher": publisher.name if publisher else None,
-        "pages": edition.pages,
+        "pages": variant.pages if variant and variant.pages else edition.pages,
         "acquisition_date": copy.acquisition_date,
         "acquisition_type_name": (acq_type.name_ita or acq_type.name) if acq_type else None,
         "shelf_name": shelf.name if shelf else None,
@@ -377,6 +389,11 @@ def update_copy(
     copy = db.query(Copy).filter_by(id=copy_id, owner_uuid=uuid_module.UUID(owner_uuid)).first()
     if not copy:
         raise HTTPException(status_code=404, detail="Copy not found")
+    if data.edition_variant_id is not None:
+        variant = db.query(EditionVariant).filter_by(id=data.edition_variant_id, edition_id=copy.edition_id).first()
+        if not variant:
+            raise HTTPException(status_code=400, detail="Variant does not belong to this copy's edition")
+        copy.edition_variant_id = variant.id
     for field in ["acquisition_date", "acquisition_type_id", "acquisition_friend_id", "shelf_id", "currency", "price", "condition_note", "status"]:
         value = getattr(data, field)
         if value is not None:

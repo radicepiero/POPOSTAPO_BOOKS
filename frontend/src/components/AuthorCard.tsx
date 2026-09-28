@@ -1,50 +1,23 @@
-import { Icon } from '../utils/icons'
-
-interface Contributor {
-  name: string
-  role?: string
-}
+import EntityCard from './EntityCard'
 
 interface Props {
-  contributors: Contributor[]
+  author: {
+    name: string
+    given_name?: string | null
+    family_name?: string | null
+    birth_date?: string | null
+    death_date?: string | null
+  }
+  variant?: 'compact' | 'detail'
 }
 
-const roleLabels: Record<string, string> = {
-  author: 'Autore',
-  co_author: 'Co-autore',
-  translator: 'Traduttore',
-  editor: 'Curatore',
-  illustrator: 'Illustratore',
-}
-
-export default function AuthorCard({ contributors }: Props) {
-  if (!contributors || contributors.length === 0) return null
-
+export default function AuthorCard({ author, variant = 'detail' }: Props) {
+  const dates = [author.birth_date, author.death_date].filter(Boolean).join(' – ')
+  const fullName = [author.given_name, author.family_name].filter(Boolean).join(' ')
   return (
-    <section className="card">
-      <h3>Autori e contributori</h3>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-        {contributors.map((contributor, index) => (
-          <div
-            key={`${contributor.name}-${index}`}
-            style={{
-              border: '1px solid #ddd',
-              borderRadius: '0.4rem',
-              padding: '0.5rem 0.75rem',
-              background: '#fafafa',
-            }}
-          >
-            <Icon name="edit" size={14} />
-            {' '}
-            <strong>{contributor.name}</strong>
-            {contributor.role && (
-              <span style={{ color: '#666', fontSize: '0.85rem', marginLeft: '0.4rem' }}>
-                ({roleLabels[contributor.role] || contributor.role})
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-    </section>
+    <EntityCard type="author" title={author.name} variant={variant}>
+      {fullName && fullName !== author.name && <p style={{ margin: '0.2rem 0', color: '#666' }}>{fullName}</p>}
+      {dates && <p style={{ margin: '0.2rem 0', color: '#666' }}>{dates}</p>}
+    </EntityCard>
   )
 }

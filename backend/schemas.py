@@ -30,6 +30,11 @@ class EnrichmentJobResponse(BaseModel):
     completed_at: Optional[datetime]
 
 
+class Contributor(BaseModel):
+    name: str
+    role: Optional[str] = None
+
+
 class CopyConfirm(BaseModel):
     job_id: Optional[UUID] = None
     proposal_index: Optional[int] = 0
@@ -45,6 +50,7 @@ class CopyConfirm(BaseModel):
     acquisition_date: Optional[date] = None
     price: Optional[Decimal] = None
     condition_note: Optional[str] = None
+    edition_variant_id: Optional[int] = None
 
 
 class CopyConfirmResponse(BaseModel):
@@ -56,11 +62,6 @@ class CopyConfirmResponse(BaseModel):
 class EditionSearchResponse(BaseModel):
     job_id: UUID
     status: str
-
-
-class Contributor(BaseModel):
-    name: str
-    role: Optional[str] = None
 
 
 class CandidateConfirm(BaseModel):
@@ -120,6 +121,7 @@ class EditionConfirmResponse(BaseModel):
 
 
 class EditionActionCreate(BaseModel):
+    edition_variant_id: Optional[int] = None
     acquisition_date: Optional[date] = None
     acquisition_type_id: Optional[int] = None
     acquisition_friend_id: Optional[int] = None
@@ -127,6 +129,67 @@ class EditionActionCreate(BaseModel):
     currency: Optional[str] = None
     price: Optional[Decimal] = None
     condition_note: Optional[str] = None
+
+
+class EditionUpdate(BaseModel):
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    authors: Optional[list[str]] = None
+    publisher: Optional[str] = None
+    year: Optional[int] = None
+    isbn: Optional[str] = None
+    pages: Optional[int] = None
+    covers: Optional[list[str]] = None
+
+
+class EditionVariantCreate(BaseModel):
+    label: Optional[str] = None
+    printing_year: Optional[int] = None
+    printing_number: Optional[str] = None
+    series_id: Optional[int] = None
+    series_number: Optional[int] = None
+    pages: Optional[int] = None
+    binding_id: Optional[int] = None
+    height_mm: Optional[int] = None
+    width_mm: Optional[int] = None
+    thickness_mm: Optional[int] = None
+    weight_g: Optional[int] = None
+    color_id: Optional[int] = None
+    format_note: Optional[str] = None
+    notes: Optional[str] = None
+    is_default: bool = False
+
+
+class EditionVariantUpdate(EditionVariantCreate):
+    is_default: Optional[bool] = None
+
+
+class EditionVariantImageCreate(BaseModel):
+    kind: Literal["front", "back", "spine", "copyright", "other"]
+    url: str
+    position: int = 0
+    is_primary: bool = False
+
+
+class WishlistItemCreate(BaseModel):
+    work_id: Optional[int] = None
+    title: Optional[str] = None
+    author: Optional[str] = None
+    note: Optional[str] = None
+
+
+class WishlistItemUpdate(BaseModel):
+    work_id: Optional[int] = None
+    title: Optional[str] = None
+    author: Optional[str] = None
+    note: Optional[str] = None
+    status: Optional[Literal["active", "fulfilled", "abandoned"]] = None
+
+
+class WishlistStartReading(BaseModel):
+    copy_id: Optional[int] = None
+    edition_variant_id: Optional[int] = None
+    start_date: Optional[date] = None
 
 
 class CopyUpdate(BaseModel):
@@ -138,10 +201,12 @@ class CopyUpdate(BaseModel):
     price: Optional[Decimal] = None
     condition_note: Optional[str] = None
     status: Optional[str] = None
+    edition_variant_id: Optional[int] = None
 
 
 class ReadingCreate(BaseModel):
     copy_id: Optional[int] = None
+    edition_variant_id: Optional[int] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     current_page: int = 0
@@ -151,7 +216,7 @@ class ReadingCreate(BaseModel):
 
 
 class ReadingStatusUpdate(BaseModel):
-    status: Literal["active", "wishlist", "finished", "abandoned"]
+    status: Literal["active", "finished", "abandoned"]
 
 
 class BookmarkCreate(BaseModel):
@@ -164,6 +229,8 @@ class BookmarkCreate(BaseModel):
 class CopyListItem(BaseModel):
     copy_id: int
     edition_id: int | None
+    edition_variant_id: int | None = None
+    variant_label: str | None = None
     status: str
     title: str | None
     author: str | None

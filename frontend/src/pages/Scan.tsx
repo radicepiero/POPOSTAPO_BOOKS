@@ -2,18 +2,16 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import client from '../api/client'
 import BarcodeScanner from '../components/BarcodeScanner'
-import BookCameraCapture from '../components/BookCameraCapture'
-import EditionCard from '../components/EditionCard'
-import ImageCropper from '../components/ImageCropper'
+import EditionImagesEditor, { EditionImageFiles, emptyFiles } from '../components/EditionImagesEditor'
+import EntityBadge from '../components/EntityBadge'
 import {
   Candidate,
   mapGoogleBooksResponse,
   mapOpenLibrarySearchResponse,
   mapOpenAIVisionResponse,
 } from '../services/bibliographicMappers'
-import { formLabels, imageRoleLabels, scanLabels, sourceLabels } from '../utils/labels'
-
-type ImageKind = 'front' | 'back' | 'copyright' | 'spine'
+import { Icon } from '../utils/icons'
+import { buttonLabels, formLabels, scanLabels, sourceLabels } from '../utils/labels'
 
 function isbn10To13(isbn10: string): string | undefined {
   const clean = isbn10.replace(/[-\s]/g, '').toUpperCase()
@@ -31,6 +29,7 @@ function canonicalIsbn(value: string): string {
 function candidateScore(c: Candidate): number {
   let score = 0
   if (c.source === 'postgresql') score += 10
+  if (c.source === 'openai_vision') score += 12
   if (c.title) score += 10
   if (c.authors?.length) score += 10
   if (c.publisher) score += 8
@@ -40,6 +39,110 @@ function candidateScore(c: Candidate): number {
   if (c.covers?.length) score += 5
   if (c.language) score += 2
   return score
+}
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function editionKey(c: Candidate): string {
+  const isbn = c.isbn13 || c.isbn || c.isbn10
+  if (isbn) return `isbn:${canonicalIsbn(isbn)}`
+  const title = normalizeText(c.title || '')
+  const authors = normalizeText([...(c.authors || [])].sort().join(' '))
+  const publisher = normalizeText(c.publisher || c.publishers?.[0] || '')
+  const language = normalizeText(c.language || '')
+  return `fuzzy:${title}|${authors}|${publisher}|${language}`
+}
+
+function variantDistinctiveness(c: Candidate): number {
+  let count = 0
+  if (c.year) count++
+  if (c.pages) count++
+  if (c.physical_format) count++
+  if (c.series?.length) count++
+  if (c.edition_name?.length) count++
+  if (c.publish_date && String(c.publish_date) !== String(c.year)) count++
+  if (c.dimensions?.height || c.dimensions?.width || c.dimensions?.thickness) count++
+  if (c.weight) count++
+  if (c.covers?.length) count++
+  return count
+}
+
+interface VariantInfo {
+  candidate: Candidate
+  distinctiveness: number
+}
+
+interface EditionGroup {
+  key: string
+  title: string
+  subtitle?: string
+  authors: string[]
+  publisher?: string
+  isbn?: string
+  language?: string
+  variants: VariantInfo[]
+}
+
+function expandCandidateVariants(candidate: Candidate): Candidate[] {
+  if (!candidate.variants || candidate.variants.length === 0) return [candidate]
+  return candidate.variants.map((variant) => ({
+    ...candidate,
+    variants: undefined,
+    default_variant_id: variant.id,
+    year: variant.printing_year ?? candidate.year,
+    pages: variant.pages ?? candidate.pages,
+    physical_format: variant.binding ?? candidate.physical_format,
+    covers: variant.covers ?? candidate.covers,
+    images: variant.images ?? candidate.images,
+    series: variant.series ? [variant.series] : candidate.series,
+    dimensions: variant.height_mm || variant.width_mm || variant.thickness_mm
+      ? {
+          height: variant.height_mm ? `${variant.height_mm} mm` : candidate.dimensions?.height,
+          width: variant.width_mm ? `${variant.width_mm} mm` : candidate.dimensions?.width,
+          thickness: variant.thickness_mm ? `${variant.thickness_mm} mm` : candidate.dimensions?.thickness,
+        }
+      : candidate.dimensions,
+    weight: variant.weight_g ? `${variant.weight_g} g` : candidate.weight,
+  }))
+}
+
+function groupCandidates(candidates: Candidate[]): EditionGroup[] {
+  const groups = new Map<string, EditionGroup>()
+  const order: string[] = []
+  for (const candidate of candidates) {
+    for (const variantCandidate of expandCandidateVariants(candidate)) {
+      const key = editionKey(variantCandidate)
+      if (!groups.has(key)) {
+        order.push(key)
+        groups.set(key, {
+          key,
+          title: variantCandidate.title || 'Titolo sconosciuto',
+          subtitle: variantCandidate.subtitle,
+          authors: variantCandidate.authors || [],
+          publisher: variantCandidate.publisher || variantCandidate.publishers?.[0],
+          isbn: variantCandidate.isbn13 || variantCandidate.isbn || variantCandidate.isbn10,
+          language: variantCandidate.language,
+          variants: [],
+        })
+      }
+      const group = groups.get(key)!
+      group.variants.push({ candidate: variantCandidate, distinctiveness: variantDistinctiveness(variantCandidate) })
+    }
+  }
+  return order
+    .map((key) => groups.get(key)!)
+    .map((group) => ({
+      ...group,
+      variants: [...group.variants].sort((a, b) => a.distinctiveness - b.distinctiveness),
+    }))
 }
 
 function isValidIsbn13(value: string) {
@@ -75,83 +178,25 @@ function Scan() {
   const [author, setAuthor] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
-  const [image, setImage] = useState<File | null>(null)
-  const [backImage, setBackImage] = useState<File | null>(null)
-  const [copyrightPages, setCopyrightPages] = useState<{ file: File; preview: string }[]>([])
-  const [spineImage, setSpineImage] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [backPreview, setBackPreview] = useState<string | null>(null)
-  const [spinePreview, setSpinePreview] = useState<string | null>(null)
+  const [imageFiles, setImageFiles] = useState<EditionImageFiles>(emptyFiles)
   const [scanning, setScanning] = useState(false)
-  const [capturing, setCapturing] = useState<ImageKind | null>(null)
-  const [cropImage, setCropImage] = useState<{ kind: ImageKind; src: string } | null>(null)
   const [searching, setSearching] = useState(false)
   const [pendingSources, setPendingSources] = useState<Set<string>>(new Set())
   const [results, setResults] = useState<Candidate[]>([])
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [editing, setEditing] = useState<EditForm | null>(null)
+  const [showConfirmationImages, setShowConfirmationImages] = useState(false)
+  const [searchCompleted, setSearchCompleted] = useState(false)
+  const [failedSources, setFailedSources] = useState<Set<string>>(new Set())
   const navigate = useNavigate()
   const abortControllerRef = useRef<AbortController | null>(null)
-  const pendingFileRef = useRef<{ kind: ImageKind; file: File } | null>(null)
-
-  const setImageForKind = (kind: ImageKind, file: File) => {
-    const url = URL.createObjectURL(file)
-    if (kind === 'front') {
-      setImage(file)
-      setPreview(url)
-    } else if (kind === 'back') {
-      setBackImage(file)
-      setBackPreview(url)
-    } else if (kind === 'copyright') {
-      setCopyrightPages((current) => [...current, { file, preview: url }])
-    } else if (kind === 'spine') {
-      setSpineImage(file)
-      setSpinePreview(url)
-    }
-  }
-
-  const openCropper = (kind: ImageKind, file: File) => {
-    pendingFileRef.current = { kind, file }
-    setCropImage({ kind, src: URL.createObjectURL(file) })
-  }
-
-  const handleCropDone = (file: File) => {
-    if (!cropImage) return
-    setImageForKind(cropImage.kind, file)
-    setCropImage(null)
-    pendingFileRef.current = null
-  }
-
-  const handleCropCancel = () => {
-    if (!cropImage) return
-    const pending = pendingFileRef.current
-    if (pending && pending.kind === cropImage.kind) {
-      setImageForKind(pending.kind, pending.file)
-    }
-    setCropImage(null)
-    pendingFileRef.current = null
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    openCropper('front', file)
-  }
-
-  const handleOptionalFile = (kind: Exclude<ImageKind, 'front'>, file?: File) => {
-    if (!file) return
-    openCropper(kind, file)
-  }
-
-  const handleCameraCapture = (file: File) => {
-    setImageForKind(capturing || 'front', file)
-    setCapturing(null)
-  }
 
   const clearSearch = () => {
     setResults([])
     setPendingSources(new Set())
+    setFailedSources(new Set())
+    setSearchCompleted(false)
     setError(null)
     setNotice(null)
     if (abortControllerRef.current) {
@@ -243,12 +288,19 @@ function Scan() {
     const isRealIsbn = looksLikeIsbn(isbnField)
     const isAdvanced = showAdvanced
 
-    const markDone = (source: string) => {
+    const markDone = (source: string, err?: any) => {
       setPendingSources((prev) => {
         const next = new Set(prev)
         next.delete(source)
         return next
       })
+      if (err) {
+        setFailedSources((prev) => {
+          const next = new Set(prev)
+          next.add(source)
+          return next
+        })
+      }
     }
 
     const filterAndAdd = (incoming: Candidate[]) => {
@@ -275,11 +327,12 @@ function Scan() {
           if (data.found && data.candidates) filterAndAdd(data.candidates)
           markDone('local')
         })
-        .catch(() => markDone('local'))
+        .catch((err) => markDone('local', err))
         .then(() => {
           setResults((prev) => {
             if (prev.length > 0) {
               setSearching(false)
+              setSearchCompleted(true)
               return prev
             }
             // Not found locally: launch API + full-text local
@@ -291,7 +344,7 @@ function Scan() {
                 if (data.found && data.candidates) filterAndAdd(data.candidates)
                 markDone('local_ft')
               })
-              .catch(() => markDone('local_ft'))
+              .catch((err) => markDone('local_ft', err))
             launchExternalSearches(params, controller, markDone, filterAndAdd)
             return prev
           })
@@ -309,7 +362,7 @@ function Scan() {
             if (data.found && data.candidates) filterAndAdd(data.candidates)
             markDone('local')
           })
-          .catch(() => markDone('local'))
+          .catch((err) => markDone('local', err))
       } else {
         // Simple: full-text with all terms combined
         const allTerms = [isbnField, searchQuery.title || '', searchQuery.author || ''].filter(Boolean).join(' ').trim()
@@ -320,7 +373,7 @@ function Scan() {
             if (data.found && data.candidates) filterAndAdd(data.candidates)
             markDone('local')
           })
-          .catch(() => markDone('local'))
+          .catch((err) => markDone('local', err))
       }
 
       // API searches use the original field split
@@ -336,7 +389,7 @@ function Scan() {
   const launchExternalSearches = (
     params: { isbn: string; title: string; author: string },
     controller: AbortController,
-    markDone: (s: string) => void,
+    markDone: (s: string, err?: any) => void,
     addResults: (c: Candidate[]) => void,
   ) => {
     const olQuery = params.isbn || (params.title ? `${params.title}${params.author ? ` author:${params.author}` : ''}` : `author:${params.author}`)
@@ -355,7 +408,7 @@ function Scan() {
         addResults(mapOpenLibrarySearchResponse(data))
         markDone('openlibrary')
       })
-      .catch(() => markDone('openlibrary'))
+      .catch((err) => markDone('openlibrary', err))
 
     const googleReq = client
       .get('/editions/search/google', { params, signal: controller.signal })
@@ -363,23 +416,26 @@ function Scan() {
         addResults(mapGoogleBooksResponse(data))
         markDone('google')
       })
-      .catch(() => markDone('google'))
+      .catch((err) => markDone('google', err))
 
-    Promise.allSettled([openlibraryReq, googleReq]).finally(() => setSearching(false))
+    Promise.allSettled([openlibraryReq, googleReq]).finally(() => {
+      setSearching(false)
+      setSearchCompleted(true)
+    })
   }
 
   const uploadImageSearch = async () => {
-    if (!image) return
+    if (!imageFiles.front) return
     setSearching(true)
     setError(null)
     setNotice(null)
     let launchedTextSearch = false
     try {
       const form = new FormData()
-      form.append('image', image)
-      if (backImage) form.append('back_image', backImage)
-      copyrightPages.forEach((cp) => form.append('copyright_pages', cp.file))
-      if (spineImage) form.append('spine_image', spineImage)
+      form.append('image', imageFiles.front)
+      if (imageFiles.back) form.append('back_image', imageFiles.back)
+      imageFiles.copyright.forEach((file) => form.append('copyright_pages', file))
+      if (imageFiles.spine) form.append('spine_image', imageFiles.spine)
       const resp = await client.post('/editions/search/cover', form)
       const data = resp.data
 
@@ -407,7 +463,7 @@ function Scan() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (image) {
+    if (imageFiles.front) {
       await uploadImageSearch()
       return
     }
@@ -415,17 +471,14 @@ function Scan() {
       // Advanced mode: use separate fields
       runTextSearch({ isbn: isbn.trim(), title: title.trim(), author: author.trim() })
     } else {
-      // Simple mode: single query field — detect if it looks like an ISBN
       const q = query.trim()
-      if (!q) {
-        setError('Inserisci un testo di ricerca')
-        return
-      }
       const clean = q.replace(/[\s-]/g, '').toUpperCase()
       if (looksLikeIsbn(clean)) {
         runTextSearch({ isbn: clean })
       } else {
-        runTextSearch({ title: q })
+        if (q) setTitle(q)
+        setError(null)
+        setShowAdvanced(true)
       }
     }
   }
@@ -453,9 +506,12 @@ function Scan() {
       abortControllerRef.current = null
     }
     if (candidate.local_edition_id) {
-      navigate(`/editions/${candidate.local_edition_id}`)
+      const variantParam = candidate.default_variant_id ? `?variant_id=${candidate.default_variant_id}` : ''
+      navigate(`/editions/${candidate.local_edition_id}${variantParam}`)
       return
     }
+    setShowCamera(false)
+    setShowConfirmationImages(false)
     setEditing({
       candidate,
       title: candidate.title || '',
@@ -468,12 +524,31 @@ function Scan() {
     })
   }
 
+  const uploadConfirmedImages = async (editionId: number) => {
+    const { data } = await client.get(`/editions/${editionId}/variants`)
+    const variants = Array.isArray(data) ? data : []
+    const variant = variants.find((item: any) => item.is_default) || variants[0]
+    if (!variant) return
+    const upload = async (file: File, kind: string, position = 0) => {
+      const form = new FormData()
+      form.append('image', file)
+      form.append('kind', kind)
+      form.append('position', String(position))
+      form.append('is_primary', String(kind === 'front'))
+      await client.post(`/variants/${variant.id}/images`, form)
+    }
+    if (imageFiles.front) await upload(imageFiles.front, 'front')
+    if (imageFiles.back) await upload(imageFiles.back, 'back')
+    if (imageFiles.spine) await upload(imageFiles.spine, 'spine')
+    for (const [index, file] of imageFiles.copyright.entries()) await upload(file, 'copyright', index)
+  }
+
   const handleConfirmEditing = async () => {
     if (!editing) return
     setSearching(true)
     setError(null)
     try {
-      const { raw, ...base } = editing.candidate
+      const { raw, images, variants, ...base } = editing.candidate
       const confirmData = {
         ...base,
         title: editing.title || undefined,
@@ -485,6 +560,7 @@ function Scan() {
         pages: editing.pages ? parseInt(editing.pages, 10) : undefined,
       }
       const resp = await client.post('/editions/confirm-candidate', confirmData)
+      await uploadConfirmedImages(resp.data.edition_id)
       setEditing(null)
       navigate(`/editions/${resp.data.edition_id}`)
     } catch (err: any) {
@@ -496,107 +572,44 @@ function Scan() {
   }
 
   const sortedResults = [...results].sort((a, b) => candidateScore(b) - candidateScore(a))
+  const groups = groupCandidates(sortedResults)
 
   return (
     <div>
       <h2>{scanLabels.title}</h2>
       <form onSubmit={handleSubmit}>
         {/* --- Simple search (single field) --- */}
-        {!showAdvanced && !showCamera && (
+        {!editing && !showAdvanced && !showCamera && (
           <>
             <label htmlFor="isbn-search" style={{ fontWeight: 600 }}>ISBN</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto auto', gap: '0.5rem', alignItems: 'stretch' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto auto auto', gap: '0.5rem', alignItems: 'stretch' }}>
               <input id="isbn-search" type="text" inputMode="numeric" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={scanLabels.isbnPlaceholder} style={{ margin: 0 }} />
-              <button type="button" onClick={() => setScanning(true)} aria-label={scanLabels.scanner} title={scanLabels.scanner} style={{ padding: '0.65rem 0.8rem' }}>{scanLabels.scanner}</button>
-              <button type="submit" disabled={searching} style={{ padding: '0.65rem 0.9rem' }}>{searching ? '...' : scanLabels.search}</button>
+              <button type="button" onClick={() => setScanning(true)} aria-label={scanLabels.scanner} title={scanLabels.scanner} style={{ padding: '0.65rem 0.8rem' }}><Icon name="scan" size={18} /></button>
+              <button type="button" onClick={() => setShowCamera(true)} aria-label={scanLabels.imageSearch} title={scanLabels.imageSearch} style={{ padding: '0.65rem 0.8rem' }}><Icon name="camera" size={18} /></button>
+              <button type="submit" disabled={searching} aria-label={scanLabels.search} title={scanLabels.search} style={{ padding: '0.65rem 0.9rem' }}>{searching ? '...' : <Icon name="search" size={18} />}</button>
             </div>
-            <button type="button" onClick={() => setShowAdvanced(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#555', fontSize: '0.85rem' }}>{scanLabels.titleAuthorSearch}</button>
           </>
         )}
 
         {/* --- Advanced search (separate fields) --- */}
-        {showAdvanced && !showCamera && (
+        {!editing && showAdvanced && !showCamera && (
           <div className="card" style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><strong>Ricerca per dati bibliografici</strong><button type="button" onClick={() => setShowAdvanced(false)} style={{ background: 'transparent', color: '#555' }}>Chiudi</button></div>
             <label>ISBN<input type="text" value={isbn} onChange={(e) => setIsbn(e.target.value)} /></label>
             <label>{formLabels.title}<input type="text" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
             <label>{formLabels.author}<input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} /></label>
-            <button type="submit" disabled={searching} style={{ width: '100%' }}>{searching ? 'Ricerca in corso...' : scanLabels.search}</button>
+            <button type="submit" disabled={searching} aria-label={scanLabels.search} title={scanLabels.search} style={{ width: '100%', display: 'inline-flex', justifyContent: 'center' }}>{searching ? 'Ricerca in corso...' : <Icon name="search" size={18} />}</button>
             <button type="button" onClick={() => setShowCamera(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#1769aa', textDecoration: 'underline' }}>{scanLabels.imageSearch}</button>
           </div>
         )}
 
         {/* --- Camera tools (collapsed) --- */}
-        {showCamera && (
+        {!editing && showCamera && (
           <div className="card" style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}><strong>Identifica il libro dalle foto</strong><button type="button" onClick={() => setShowCamera(false)} style={{ background: 'transparent', color: '#555' }}>Indietro</button></div>
             <p style={{ color: '#666', marginTop: 0 }}>{scanLabels.coverHint}</p>
-            {[
-              { kind: 'front' as const, label: imageRoleLabels['front cover'], required: true, file: image, preview },
-              { kind: 'back' as const, label: imageRoleLabels['back cover'], required: false, file: backImage, preview: backPreview },
-              { kind: 'spine' as const, label: imageRoleLabels['spine'], required: false, file: spineImage, preview: spinePreview },
-            ].map((item) => (
-              <div key={item.kind} style={{ borderTop: '1px solid #ddd', padding: '0.9rem 0' }}>
-                <strong>{item.label}</strong><span style={{ color: '#777', fontSize: '0.8rem' }}> · {item.required ? 'obbligatoria' : 'opzionale'}</span>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  <button type="button" onClick={() => setCapturing(item.kind)} style={{ flex: 1 }}>Scatta</button>
-                  <label style={{ flex: 1, margin: 0 }}>Carica<input type="file" accept="image/*" onChange={(e) => item.kind === 'front' ? handleFileChange(e) : handleOptionalFile(item.kind, e.target.files?.[0])} /></label>
-                </div>
-                {!item.required && !item.file && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const messages: Record<typeof item.kind, string> = {
-                        back: scanLabels.proceedBack,
-                        spine: scanLabels.proceedSpine,
-                        front: '',
-                      }
-                      setNotice(messages[item.kind])
-                    }}
-                    style={{ marginTop: '0.5rem', padding: 0, background: 'transparent', color: '#555', textDecoration: 'underline' }}
-                  >
-                    {(() => {
-                      const labels: Record<typeof item.kind, string> = {
-                        back: scanLabels.skipBack,
-                        spine: scanLabels.skipSpine,
-                        front: '',
-                      }
-                      return labels[item.kind]
-                    })()}
-                  </button>
-                )}
-                {item.preview && <img src={item.preview} alt={item.label} style={{ display: 'block', maxWidth: '100%', maxHeight: '160px', marginTop: '0.6rem', borderRadius: '0.5rem' }} />}
-              </div>
-            ))}
-            <div style={{ borderTop: '1px solid #ddd', padding: '0.9rem 0' }}>
-              <strong>{imageRoleLabels['copyright or title page']}</strong><span style={{ color: '#777', fontSize: '0.8rem' }}> · opzionale, più pagine</span>
-              {copyrightPages.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', margin: '0.5rem 0' }}>
-                  {copyrightPages.map((cp, index) => (
-                    <div key={index} style={{ position: 'relative' }}>
-                      <img src={cp.preview} alt={`Pagina dati editoriali ${index + 1}`} style={{ width: '60px', height: '80px', objectFit: 'cover', borderRadius: '0.4rem' }} />
-                      <button
-                        type="button"
-                        onClick={() => setCopyrightPages((current) => current.filter((_, i) => i !== index))}
-                        style={{ position: 'absolute', top: '-0.3rem', right: '-0.3rem', width: '1.2rem', height: '1.2rem', padding: 0, borderRadius: '50%', background: '#b00020', color: '#fff', fontSize: '0.7rem', lineHeight: 1 }}
-                      >×</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <button type="button" onClick={() => setCapturing('copyright')} style={{ flex: 1 }}>Scatta</button>
-                <label style={{ flex: 1, margin: 0 }}>Carica<input type="file" accept="image/*" onChange={(e) => handleOptionalFile('copyright', e.target.files?.[0])} /></label>
-              </div>
-              <button
-                type="button"
-                onClick={() => setNotice(scanLabels.proceedCopyright)}
-                style={{ marginTop: '0.5rem', padding: 0, background: 'transparent', color: '#555', textDecoration: 'underline' }}
-              >
-                {scanLabels.skipCopyright}
-              </button>
-            </div>
-            <button type="submit" disabled={!image || searching} style={{ width: '100%', marginTop: '0.5rem' }}>{searching ? 'Analisi in corso...' : scanLabels.analyze}</button>
+            <EditionImagesEditor onChange={setImageFiles} requireFront />
+            <button type="submit" disabled={!imageFiles.front || searching} style={{ width: '100%', marginTop: '0.5rem' }}>{searching ? 'Analisi in corso...' : scanLabels.analyze}</button>
           </div>
         )}
 
@@ -604,9 +617,25 @@ function Scan() {
         {error && <div className="error">{error}</div>}
       </form>
 
-      {searching && pendingSources.size > 0 && (
-        <div style={{ marginTop: '1rem', color: '#666' }}>
-          In attesa di: {[...pendingSources].map((s) => sourceLabels[s] || s).join(', ')}
+      {searching && (
+        <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666' }}>
+          <Icon name="loading" size={18} className="spinner" />
+          <span>
+            {pendingSources.size > 0
+              ? `Ricerca in corso… in attesa di: ${[...pendingSources].map((s) => sourceLabels[s] || s).join(', ')}`
+              : 'Ricerca in corso…'}
+          </span>
+        </div>
+      )}
+
+      {!editing && searchCompleted && sortedResults.length === 0 && !error && !searching && (
+        <div style={{ marginTop: '1rem' }}>
+          <p style={{ color: '#666' }}>Nessun risultato trovato.</p>
+          {failedSources.size > 0 && (
+            <p style={{ color: '#b00020', fontSize: '0.85rem' }}>
+              Alcune fonti non hanno risposto: {[...failedSources].map((s) => sourceLabels[s] || s).join(', ')}. Riprova.
+            </p>
+          )}
         </div>
       )}
 
@@ -649,6 +678,14 @@ function Scan() {
               Pagine
               <input type="number" value={editing.pages} onChange={(e) => setEditing({ ...editing, pages: e.target.value })} />
             </label>
+            <button
+              type="button"
+              onClick={() => setShowConfirmationImages((current) => !current)}
+              style={{ width: '100%', marginTop: '0.75rem' }}
+            >
+              {showConfirmationImages ? 'Nascondi immagini' : 'Immagini'}
+            </button>
+            {showConfirmationImages && <EditionImagesEditor initialFiles={imageFiles} onChange={setImageFiles} />}
             {editing.candidate.source && (
               <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>
                 Fonte: {sourceLabels[editing.candidate.source] || editing.candidate.source}
@@ -656,8 +693,8 @@ function Scan() {
             )}
             {error && <div className="error">{error}</div>}
             <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
-              <button onClick={handleConfirmEditing} disabled={searching || !editing.title.trim()}>
-                {searching ? 'Salvataggio...' : 'Salva edizione'}
+              <button onClick={handleConfirmEditing} disabled={searching || !editing.title.trim()} aria-label="Salva edizione" title="Salva edizione" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                <Icon name="save" size={16} />{searching ? 'Salvataggio...' : ''}
               </button>
               <button type="button" onClick={() => setEditing(null)} style={{ background: '#ccc', color: '#333' }}>
                 Annulla
@@ -667,28 +704,81 @@ function Scan() {
         </div>
       )}
 
-      {!editing && sortedResults.length > 0 && (
+      {!editing && groups.length > 0 && (
         <div style={{ marginTop: '1rem' }}>
           <h3>{scanLabels.results}</h3>
-          {sortedResults.map((candidate, idx) => (
-            <EditionCard
-              key={`${candidate.source}-${candidate.external_id || candidate.isbn || candidate.title || ''}-${idx}`}
-              candidate={candidate}
-              onUse={() => handleCandidateSelect(candidate)}
-            />
+          {groups.map((group) => (
+            <div key={group.key} className="card" style={{ marginBottom: '1rem', padding: '1rem' }}>
+              <div style={{ marginBottom: '0.75rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <EntityBadge type="edition" size="1.25rem" />
+                  <strong style={{ fontSize: '1.1rem' }}>{group.title}</strong>
+                </div>
+                {group.subtitle && <p style={{ margin: '0.25rem 0', color: '#555' }}>{group.subtitle}</p>}
+                <p style={{ margin: '0.25rem 0', color: '#666', fontSize: '0.9rem' }}>
+                  {group.authors.join(', ') || 'Autore sconosciuto'}
+                  {group.publisher && ` · ${group.publisher}`}
+                  {group.isbn && ` · ${group.isbn}`}
+                  {group.language && ` · ${group.language}`}
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                {group.variants.map(({ candidate }) => (
+                  <div
+                    key={`${candidate.source}-${candidate.external_id || candidate.isbn || candidate.title || ''}-${candidate.year ?? ''}`}
+                    style={{
+                      flex: '1 1 160px',
+                      minWidth: '140px',
+                      maxWidth: '220px',
+                      border: candidate.source === 'openai_vision' ? '2px solid #1769aa' : '1px solid #ddd',
+                      borderRadius: '0.4rem',
+                      padding: '0.5rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      background: candidate.source === 'openai_vision' ? '#eef7ff' : '#fff',
+                    }}
+                  >
+                    {candidate.source === 'openai_vision' && (
+                      <strong style={{ display: 'block', color: '#1769aa', fontSize: '0.8rem', marginBottom: '0.35rem' }}>
+                        Proposta POPOSTAPO
+                      </strong>
+                    )}
+                    {candidate.covers?.[0] ? (
+                      <img
+                        src={candidate.covers[0]}
+                        alt="Copertina"
+                        style={{ width: '100%', height: '140px', objectFit: 'contain', borderRadius: '0.3rem', marginBottom: '0.5rem' }}
+                      />
+                    ) : (
+                      <div style={{ width: '100%', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', color: '#888', borderRadius: '0.3rem', marginBottom: '0.5rem' }}>
+                        {scanLabels.noCover}
+                      </div>
+                    )}
+                    <div style={{ flex: 1, fontSize: '0.85rem', color: '#555' }}>
+                      {candidate.year && <p style={{ margin: '0.15rem 0' }}><strong>Anno:</strong> {candidate.year}</p>}
+                      {candidate.pages && <p style={{ margin: '0.15rem 0' }}><strong>Pagine:</strong> {candidate.pages}</p>}
+                      {candidate.physical_format && <p style={{ margin: '0.15rem 0' }}><strong>Formato:</strong> {candidate.physical_format}</p>}
+                      {candidate.series?.length ? <p style={{ margin: '0.15rem 0' }}><strong>Collana:</strong> {candidate.series.join(', ')}</p> : null}
+                      <p style={{ margin: '0.15rem 0', color: '#888', fontSize: '0.75rem' }}>{sourceLabels[candidate.source] || candidate.source}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCandidateSelect(candidate)}
+                      aria-label={buttonLabels.useThis}
+                      title={buttonLabels.useThis}
+                      style={{ width: '100%', marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Icon name="useThis" size={18} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}
 
-      {cropImage && (
-        <ImageCropper
-          imageSrc={cropImage.src}
-          onCropDone={handleCropDone}
-          onCancel={handleCropCancel}
-        />
-      )}
       {scanning && <BarcodeScanner onScan={handleScan} onClose={() => setScanning(false)} />}
-      {capturing && <BookCameraCapture onCapture={handleCameraCapture} onClose={() => setCapturing(null)} />}
     </div>
   )
 }

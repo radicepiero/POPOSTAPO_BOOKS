@@ -27,6 +27,7 @@ interface Friend {
 }
 
 export interface CopyFormData {
+  edition_variant_id?: number
   acquisition_date?: string
   acquisition_type_id?: number
   acquisition_friend_id?: number
@@ -38,6 +39,7 @@ export interface CopyFormData {
 
 interface Props {
   editionId?: number
+  editionVariantId?: number
   copy?: {
     copy_id: number
     edition_id?: number | null
@@ -66,7 +68,7 @@ function typeNeedsFriend(typeName: string) {
   return /regal|scambi|prestit|don|ered/.test(lower)
 }
 
-export default function CopyFormModal({ editionId, copy, onClose, onSaved }: Props) {
+export default function CopyFormModal({ editionId, editionVariantId, copy, onClose, onSaved }: Props) {
   const [step, setStep] = useState(copy?.acquisition_type_id ? 2 : 1)
   const [date, setDate] = useState(copy?.acquisition_date || '')
   const [acquisitionTypeId, setAcquisitionTypeId] = useState(String(copy?.acquisition_type_id || ''))
@@ -117,6 +119,7 @@ export default function CopyFormModal({ editionId, copy, onClose, onSaved }: Pro
     setLoading(true)
     setError(null)
     const payload: CopyFormData = {
+      edition_variant_id: editionVariantId,
       acquisition_date: date || undefined,
       acquisition_type_id: acquisitionTypeId ? Number(acquisitionTypeId) : undefined,
       acquisition_friend_id: needsFriend && acquisitionFriendId ? Number(acquisitionFriendId) : undefined,
@@ -168,7 +171,7 @@ export default function CopyFormModal({ editionId, copy, onClose, onSaved }: Pro
               Dati gestibili dal database: tipo di acquisizione, data, prezzo, valuta, amico (se regalo/scambio/prestito), libreria/scaffale, condizioni/note.
             </p>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-              <button type="button" onClick={onClose} style={{ flex: 1, background: '#555' }}>{buttonLabels.cancel}</button>
+              <button type="button" onClick={onClose} aria-label={buttonLabels.cancel} title={buttonLabels.cancel} style={{ flex: 1, background: '#555', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="cancel" size={18} /></button>
             </div>
           </div>
         )}
@@ -219,9 +222,9 @@ export default function CopyFormModal({ editionId, copy, onClose, onSaved }: Pro
             <label>{formLabels.conditionNote}<textarea maxLength={450} value={conditionNote} onChange={(e) => setConditionNote(e.target.value)} /></label>
             {error && <div className="error">{error}</div>}
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-              <button type="button" onClick={onClose} style={{ flex: 1, background: '#555' }}>{buttonLabels.cancel}</button>
+              <button type="button" onClick={onClose} aria-label={buttonLabels.cancel} title={buttonLabels.cancel} style={{ flex: 1, background: '#555', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="cancel" size={18} /></button>
               <button type="button" onClick={goBack} style={{ flex: 1, background: '#777' }}>{buttonLabels.back}</button>
-              <button type="submit" disabled={loading} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}><Icon name="save" size={16} />{loading ? 'Salvataggio...' : buttonLabels.save}</button>
+              <button type="submit" disabled={loading} aria-label={buttonLabels.save} title={buttonLabels.save} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}><Icon name="save" size={16} />{loading ? 'Salvataggio...' : ''}</button>
             </div>
           </form>
         )}

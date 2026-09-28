@@ -6,11 +6,13 @@ import { Icon } from '../utils/icons'
 export interface ReadingItem {
   reading_id: number
   edition_id: number
+  edition_variant_id?: number | null
+  variant_label?: string | null
   start_date?: string
   end_date?: string
   current_page: number
   finished: boolean
-  status: 'active' | 'wishlist' | 'finished' | 'abandoned'
+  status: 'active' | 'finished' | 'abandoned'
   status_changed_at?: string
   created_at: string
   is_inactive: boolean
@@ -78,9 +80,7 @@ export default function ReadingCard({ reading, onStatusChange, onDelete, onAddBo
           {reading.authors.length > 0 && <p style={{ margin: '0 0 0.5rem', color: '#555' }}>{reading.authors.join(', ')}</p>}
           {reading.is_inactive && <span style={{ display: 'inline-block', padding: '0.2rem 0.45rem', borderRadius: '0.4rem', background: '#fff3cd', color: '#765c00', fontSize: '0.8rem', fontWeight: 600 }}>Inattiva da più di 2 mesi</span>}
 
-          {reading.status === 'wishlist' ? (
-            <p style={{ margin: '0.35rem 0' }}>{readingStatusLabels.wishlist}</p>
-          ) : reading.status === 'finished' ? (
+          {reading.status === 'finished' ? (
             <p style={{ margin: '0.35rem 0' }}>{readingStatusLabels.finished}{reading.end_date ? ` il ${formatDate(reading.end_date)}` : ''}</p>
           ) : reading.status === 'abandoned' ? (
             <p style={{ margin: '0.35rem 0' }}>{readingStatusLabels.abandoned}{reading.current_page > 0 ? ` a pagina ${reading.current_page}` : ''}</p>
@@ -101,9 +101,8 @@ export default function ReadingCard({ reading, onStatusChange, onDelete, onAddBo
           {reading.rating != null && <p style={{ margin: '0.35rem 0' }}>Valutazione: {Number(reading.rating).toLocaleString('it-IT')} / 5</p>}
           {reading.last_note && <p style={{ margin: '0.5rem 0', fontStyle: 'italic' }}>“{reading.last_note}”</p>}
           <p style={{ margin: '0.5rem 0', color: '#777', fontSize: '0.8rem' }}>
-            {reading.status === 'wishlist'
-              ? `${readingListLabels.addedOn}: ${formatDate(reading.created_at.slice(0, 10))}`
-              : activityDate ? `${readingListLabels.lastUpdate}: ${formatDate(activityDate)}` : 'Data non disponibile'}
+            {activityDate ? `${readingListLabels.lastUpdate}: ${formatDate(activityDate)}` : 'Data non disponibile'}
+            {reading.variant_label ? ` · ${reading.variant_label}` : ''}
             {reading.bookmark_count > 0 ? ` · ${reading.bookmark_count} ${readingListLabels.bookmarkCount}` : ''}
           </p>
         </div>
@@ -119,7 +118,6 @@ export default function ReadingCard({ reading, onStatusChange, onDelete, onAddBo
         </button>
         {menuOpen && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
-            {reading.status === 'wishlist' && actionButton(buttonLabels.startReading, 'addReading', () => onStatusChange('active'))}
             {(reading.status === 'abandoned' || reading.status === 'finished') && actionButton(buttonLabels.continue, 'continue', () => onStatusChange('active'))}
             {reading.status === 'active' && (
               <>
