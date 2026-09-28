@@ -19,6 +19,7 @@ import {
   Save,
   Search,
   ShoppingCart,
+  Upload,
   Users,
   Trash2,
   X,
@@ -30,7 +31,7 @@ const iconMap = {
   authors: Users,
   library: LibraryBig,
   login: LogIn,
-  addCopy: BookOpen,
+  addCopy: LibraryBig,
   addReading: Bookmark,
   addWishlist: Heart,
   addBookmark: BookMarked,
@@ -50,6 +51,7 @@ const iconMap = {
   scan: Barcode,
   search: Search,
   sell: ShoppingCart,
+  upload: Upload,
   useThis: Check,
 }
 

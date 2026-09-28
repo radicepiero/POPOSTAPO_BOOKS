@@ -576,6 +576,7 @@ def delete_edition(
     db.query(EditionsTag).filter_by(edition_id=edition_id).delete(synchronize_session=False)
     db.query(EditionsLink).filter_by(edition_id=edition_id).delete(synchronize_session=False)
     db.query(SharingMembreEdition).filter_by(edition_id=edition_id).delete(synchronize_session=False)
+    db.query(EditionVariant).filter_by(edition_id=edition_id).delete(synchronize_session=False)
 
     db.delete(edition)
     db.commit()

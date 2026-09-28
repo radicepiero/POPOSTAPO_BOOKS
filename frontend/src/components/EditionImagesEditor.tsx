@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { imageRoleLabels } from '../utils/labels'
 import BookCameraCapture from './BookCameraCapture'
 import ImageCropper from './ImageCropper'
+import ImageLightbox from './ImageLightbox'
 import { Icon } from '../utils/icons'
 
 export type EditionImageKind = 'front' | 'back' | 'spine' | 'copyright'
@@ -45,6 +46,10 @@ export default function EditionImagesEditor({ existingImages = [], existingImage
   }))
   const [capturing, setCapturing] = useState<EditionImageKind | null>(null)
   const [cropImage, setCropImage] = useState<{ kind: EditionImageKind; file: File; src: string } | null>(null)
+  const [lightbox, setLightbox] = useState<{ open: boolean; src: string; alt: string }>({ open: false, src: '', alt: '' })
+
+  const openLightbox = (src: string, alt: string) => setLightbox({ open: true, src, alt })
+  const closeLightbox = () => setLightbox({ open: false, src: '', alt: '' })
 
   const emit = (next: typeof items) => {
     onChange({
@@ -104,23 +109,22 @@ export default function EditionImagesEditor({ existingImages = [], existingImage
   ]
 
   return (
-    <fieldset style={{ border: '1px solid #ddd', borderRadius: '0.4rem', marginTop: '0.75rem' }}>
-      <legend>Immagini dell'edizione</legend>
+    <fieldset style={{ border: '1px solid #ddd', borderRadius: '0.4rem', padding: '0.75rem', marginTop: '0.75rem' }}>
+      <legend style={{ fontSize: '0.9rem', padding: '0 0.3rem' }}>Immagini dell'edizione</legend>
       {(existingImages.length > 0 || existingImageRecords.length > 0) && (
-        <div style={{ borderBottom: '1px solid #ddd', paddingBottom: '0.75rem' }}>
-          <strong>Immagini della variante</strong>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <strong style={{ fontSize: '0.85rem' }}>Immagini della variante</strong>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.4rem' }}>
             {existingImageRecords.map((image, index) => (
               <div key={image.id} style={{ position: 'relative' }}>
-                <img src={image.url} alt={`${image.kind} ${index + 1}`} style={{ width: '70px', height: '95px', objectFit: 'contain' }} />
-                <small style={{ display: 'block', textAlign: 'center', color: '#666' }}>{image.kind}</small>
-                {onDeleteExistingImage && <button type="button" aria-label="Rimuovi immagine" onClick={() => onDeleteExistingImage(image)} style={{ position: 'absolute', top: '-0.3rem', right: '-0.3rem', width: '1.2rem', height: '1.2rem', padding: 0, borderRadius: '50%', background: '#b00020' }}>×</button>}
+                <img src={image.url} alt={`${image.kind} ${index + 1}`} onDoubleClick={() => openLightbox(image.url, `${image.kind} ${index + 1}`)} style={{ width: '55px', height: '75px', objectFit: 'contain', borderRadius: '0.3rem', cursor: 'pointer' }} />
+                {onDeleteExistingImage && <button type="button" aria-label="Rimuovi immagine" onClick={() => onDeleteExistingImage(image)} style={{ position: 'absolute', top: '-0.25rem', right: '-0.25rem', width: '1.1rem', height: '1.1rem', padding: 0, borderRadius: '50%', background: '#b00020', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="delete" size={12} /></button>}
               </div>
             ))}
             {existingImages.map((image, index) => (
               <div key={`${image}-${index}`} style={{ position: 'relative' }}>
-                <img src={image} alt={`Immagine esistente ${index + 1}`} style={{ width: '70px', height: '95px', objectFit: 'contain' }} />
-                {onExistingImagesChange && <button type="button" aria-label="Rimuovi immagine" onClick={() => onExistingImagesChange(existingImages.filter((_, currentIndex) => currentIndex !== index))} style={{ position: 'absolute', top: '-0.3rem', right: '-0.3rem', width: '1.2rem', height: '1.2rem', padding: 0, borderRadius: '50%', background: '#b00020' }}>×</button>}
+                <img src={image} alt={`Immagine esistente ${index + 1}`} onDoubleClick={() => openLightbox(image, `Immagine esistente ${index + 1}`)} style={{ width: '55px', height: '75px', objectFit: 'contain', borderRadius: '0.3rem', cursor: 'pointer' }} />
+                {onExistingImagesChange && <button type="button" aria-label="Rimuovi immagine" onClick={() => onExistingImagesChange(existingImages.filter((_, currentIndex) => currentIndex !== index))} style={{ position: 'absolute', top: '-0.25rem', right: '-0.25rem', width: '1.1rem', height: '1.1rem', padding: 0, borderRadius: '50%', background: '#b00020', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="delete" size={12} /></button>}
               </div>
             ))}
           </div>
@@ -129,34 +133,58 @@ export default function EditionImagesEditor({ existingImages = [], existingImage
       {slots.map(({ kind, label, required }) => {
         const item = items[kind]
         return (
-          <div key={kind} style={{ borderBottom: '1px solid #ddd', padding: '0.9rem 0' }}>
-            <strong>{label}</strong><span style={{ color: '#777', fontSize: '0.8rem' }}> · {required ? 'obbligatoria' : 'opzionale'}</span>
-            {item && <img src={item.preview} alt={label} style={{ display: 'block', maxWidth: '100%', maxHeight: '160px', marginTop: '0.6rem', borderRadius: '0.5rem' }} />}
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <button type="button" onClick={() => setCapturing(kind)} aria-label={`Scatta ${label}`} title={`Scatta ${label}`} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="camera" size={18} /></button>
-              <label style={{ flex: 1, margin: 0 }}>Carica<input type="file" accept="image/*" onChange={(event) => { openCropper(kind, event.target.files?.[0]); event.target.value = '' }} /></label>
-              {item && <button type="button" onClick={() => removeImage(kind)} style={{ background: '#b00020' }}>Rimuovi</button>}
+          <div key={kind} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
+            <div style={{ width: '55px', height: '75px', flexShrink: 0, borderRadius: '0.3rem', overflow: 'hidden', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {item ? (
+                <img src={item.preview} alt={label} onDoubleClick={() => openLightbox(item.preview, label)} style={{ width: '100%', height: '100%', objectFit: 'contain', cursor: 'pointer' }} />
+              ) : (
+                <span style={{ color: '#aaa' }}><Icon name="camera" size={20} /></span>
+              )}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <strong style={{ fontSize: '0.9rem', display: 'block' }}>{label}</strong>
+              <span style={{ color: '#777', fontSize: '0.75rem' }}>{required ? 'obbligatoria' : 'opzionale'}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.35rem' }}>
+              <button type="button" onClick={() => setCapturing(kind)} aria-label={`Scatta ${label}`} title={`Scatta ${label}`} style={{ padding: '0.45rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="camera" size={16} /></button>
+              <label style={{ margin: 0, display: 'inline-flex' }} title={`Carica ${label}`}>
+                <span style={{ padding: '0.45rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}><Icon name="upload" size={16} /></span>
+                <input type="file" accept="image/*" onChange={(event) => { openCropper(kind, event.target.files?.[0]); event.target.value = '' }} style={{ display: 'none' }} />
+              </label>
+              {item && <button type="button" onClick={() => removeImage(kind)} aria-label={`Rimuovi ${label}`} title={`Rimuovi ${label}`} style={{ padding: '0.45rem', background: '#b00020', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="delete" size={16} /></button>}
             </div>
           </div>
         )
       })}
-      <div style={{ padding: '0.9rem 0 0' }}>
-        <strong>{imageRoleLabels['copyright or title page']}</strong><span style={{ color: '#777', fontSize: '0.8rem' }}> · opzionale, più pagine</span>
+      <div style={{ padding: '0.5rem 0 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', borderBottom: items.copyright.length > 0 ? '1px solid #eee' : 'none', paddingBottom: items.copyright.length > 0 ? '0.5rem' : 0 }}>
+          <div style={{ width: '55px', height: '75px', flexShrink: 0, borderRadius: '0.3rem', overflow: 'hidden', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#aaa' }}><Icon name="camera" size={20} /></span>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <strong style={{ fontSize: '0.9rem', display: 'block' }}>{imageRoleLabels['copyright or title page']}</strong>
+            <span style={{ color: '#777', fontSize: '0.75rem' }}>opzionale, più pagine</span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.35rem' }}>
+            <button type="button" onClick={() => setCapturing('copyright')} aria-label="Scatta pagina dati editoriali" title="Scatta pagina dati editoriali" style={{ padding: '0.45rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="camera" size={16} /></button>
+            <label style={{ margin: 0, display: 'inline-flex' }} title="Carica pagina dati editoriali">
+              <span style={{ padding: '0.45rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}><Icon name="upload" size={16} /></span>
+              <input type="file" accept="image/*" onChange={(event) => { openCropper('copyright', event.target.files?.[0]); event.target.value = '' }} style={{ display: 'none' }} />
+            </label>
+          </div>
+        </div>
         {items.copyright.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', margin: '0.5rem 0' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
             {items.copyright.map((item, index) => (
               <div key={item.preview} style={{ position: 'relative' }}>
-                <img src={item.preview} alt={`Pagina dati editoriali ${index + 1}`} style={{ width: '60px', height: '80px', objectFit: 'cover', borderRadius: '0.4rem' }} />
-                <button type="button" aria-label="Rimuovi pagina" onClick={() => removeImage('copyright', index)} style={{ position: 'absolute', top: '-0.3rem', right: '-0.3rem', width: '1.2rem', height: '1.2rem', padding: 0, borderRadius: '50%', background: '#b00020' }}>×</button>
+                <img src={item.preview} alt={`Pagina dati editoriali ${index + 1}`} onDoubleClick={() => openLightbox(item.preview, `Pagina dati editoriali ${index + 1}`)} style={{ width: '55px', height: '75px', objectFit: 'contain', borderRadius: '0.3rem', cursor: 'pointer' }} />
+                <button type="button" aria-label="Rimuovi pagina" onClick={() => removeImage('copyright', index)} style={{ position: 'absolute', top: '-0.25rem', right: '-0.25rem', width: '1.1rem', height: '1.1rem', padding: 0, borderRadius: '50%', background: '#b00020', color: '#fff', fontSize: '0.7rem', border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="delete" size={12} /></button>
               </div>
             ))}
           </div>
         )}
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-          <button type="button" onClick={() => setCapturing('copyright')} aria-label="Scatta pagina dati editoriali" title="Scatta pagina dati editoriali" style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="camera" size={18} /></button>
-          <label style={{ flex: 1, margin: 0 }}>Carica<input type="file" accept="image/*" onChange={(event) => { openCropper('copyright', event.target.files?.[0]); event.target.value = '' }} /></label>
-        </div>
       </div>
+      {lightbox.open && <ImageLightbox open={lightbox.open} src={lightbox.src} alt={lightbox.alt} onClose={closeLightbox} />}
       {cropImage && <ImageCropper imageSrc={cropImage.src} onCropDone={finishCrop} onCancel={cancelCrop} />}
       {capturing && <BookCameraCapture onCapture={handleCapture} onClose={() => setCapturing(null)} />}
     </fieldset>

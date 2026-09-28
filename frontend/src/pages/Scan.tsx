@@ -4,6 +4,7 @@ import client from '../api/client'
 import BarcodeScanner from '../components/BarcodeScanner'
 import EditionImagesEditor, { EditionImageFiles, emptyFiles } from '../components/EditionImagesEditor'
 import EntityBadge from '../components/EntityBadge'
+import ImageLightbox from '../components/ImageLightbox'
 import {
   Candidate,
   mapGoogleBooksResponse,
@@ -26,9 +27,9 @@ function canonicalIsbn(value: string): string {
   return clean.length === 10 ? isbn10To13(clean) || clean : clean
 }
 
-function candidateScore(c: Candidate): number {
+function candidateScore(c: Candidate, isbnQuery?: string): number {
   let score = 0
-  if (c.source === 'postgresql') score += 10
+  if (c.source === 'postgresql') score += 50
   if (c.source === 'openai_vision') score += 12
   if (c.title) score += 10
   if (c.authors?.length) score += 10
@@ -38,6 +39,12 @@ function candidateScore(c: Candidate): number {
   if (c.pages) score += 3
   if (c.covers?.length) score += 5
   if (c.language) score += 2
+  if (isbnQuery) {
+    const matches = [c.isbn, c.isbn13, c.isbn10]
+      .filter(Boolean)
+      .some((value) => canonicalIsbn(value!) === isbnQuery)
+    if (matches) score += 30
+  }
   return score
 }
 
@@ -189,6 +196,9 @@ function Scan() {
   const [showConfirmationImages, setShowConfirmationImages] = useState(false)
   const [searchCompleted, setSearchCompleted] = useState(false)
   const [failedSources, setFailedSources] = useState<Set<string>>(new Set())
+  const [lightbox, setLightbox] = useState<{ open: boolean; src: string; alt: string }>({ open: false, src: '', alt: '' })
+  const openLightbox = (src: string, alt: string) => setLightbox({ open: true, src, alt })
+  const closeLightbox = () => setLightbox({ open: false, src: '', alt: '' })
   const navigate = useNavigate()
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -571,7 +581,12 @@ function Scan() {
     }
   }
 
-  const sortedResults = [...results].sort((a, b) => candidateScore(b) - candidateScore(a))
+  const isbnQuery = (() => {
+    const raw = showAdvanced ? isbn : query
+    const clean = raw.trim().replace(/[\s-]/g, '').toUpperCase()
+    return looksLikeIsbn(clean) ? canonicalIsbn(clean) : undefined
+  })()
+  const sortedResults = [...results].sort((a, b) => candidateScore(b, isbnQuery) - candidateScore(a, isbnQuery))
   const groups = groupCandidates(sortedResults)
 
   return (
@@ -609,7 +624,9 @@ function Scan() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}><strong>Identifica il libro dalle foto</strong><button type="button" onClick={() => setShowCamera(false)} style={{ background: 'transparent', color: '#555' }}>Indietro</button></div>
             <p style={{ color: '#666', marginTop: 0 }}>{scanLabels.coverHint}</p>
             <EditionImagesEditor onChange={setImageFiles} requireFront />
-            <button type="submit" disabled={!imageFiles.front || searching} style={{ width: '100%', marginTop: '0.5rem' }}>{searching ? 'Analisi in corso...' : scanLabels.analyze}</button>
+            <button type="submit" disabled={!imageFiles.front || searching} aria-label={scanLabels.analyze} title={scanLabels.analyze} style={{ width: '100%', marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              {searching ? 'Analisi in corso...' : <Icon name="search" size={18} />}
+            </button>
           </div>
         )}
 
@@ -747,7 +764,8 @@ function Scan() {
                       <img
                         src={candidate.covers[0]}
                         alt="Copertina"
-                        style={{ width: '100%', height: '140px', objectFit: 'contain', borderRadius: '0.3rem', marginBottom: '0.5rem' }}
+                        onDoubleClick={() => openLightbox(candidate.covers![0], candidate.title || 'Copertina')}
+                        style={{ width: '100%', height: '140px', objectFit: 'contain', borderRadius: '0.3rem', marginBottom: '0.5rem', cursor: 'pointer' }}
                       />
                     ) : (
                       <div style={{ width: '100%', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', color: '#888', borderRadius: '0.3rem', marginBottom: '0.5rem' }}>
@@ -778,6 +796,7 @@ function Scan() {
         </div>
       )}
 
+      {lightbox.open && <ImageLightbox open={lightbox.open} src={lightbox.src} alt={lightbox.alt} onClose={closeLightbox} />}
       {scanning && <BarcodeScanner onScan={handleScan} onClose={() => setScanning(false)} />}
     </div>
   )

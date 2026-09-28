@@ -325,6 +325,7 @@ def link_contributors(edition_id: int, contributors: list[dict], source: str, db
         role = (contributor.get("role") or "author").strip().lower()
         if not name:
             continue
+        ensure_author_role(role, role, db)
         author = find_or_create_author(name, source, db)
         existing = (
             db.query(EditionsAuthor)
