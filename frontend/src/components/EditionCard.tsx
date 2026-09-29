@@ -6,6 +6,7 @@ import { Icon, IconName } from '../utils/icons'
 import AuthorMiniCard from './AuthorMiniCard'
 import EntityBadge from './EntityBadge'
 import EntityCard from './EntityCard'
+import ImageLightbox from './ImageLightbox'
 
 interface Props {
   candidate: Candidate
@@ -27,6 +28,9 @@ function isbn10To13(isbn10: string): string | undefined {
 export default function EditionCard({ candidate, onUse, onSelect, footer, useIcon = 'useThis', variant = 'compact' }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [showAllImages, setShowAllImages] = useState(false)
+  const [lightbox, setLightbox] = useState<{ open: boolean; initialIndex: number }>({ open: false, initialIndex: 0 })
+  const openLightbox = (index: number) => setLightbox({ open: true, initialIndex: index })
+  const closeLightbox = () => setLightbox({ open: false, initialIndex: 0 })
   const authorRefs: AuthorReference[] = candidate.author_refs?.length
     ? candidate.author_refs
     : (candidate.authors || []).map((name) => ({ display_name: name, role: 'author' }))
@@ -99,7 +103,7 @@ export default function EditionCard({ candidate, onUse, onSelect, footer, useIco
   const visibleCovers = candidate.covers || []
   const imageAside = variant === 'detail' ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '130px' }}>
-      {visibleCovers[0] && <img src={visibleCovers[0]} alt="Copertina" style={{ width: 'auto', maxWidth: '120px', height: '170px', objectFit: 'contain', alignSelf: 'center', borderRadius: '0.35rem' }} />}
+      {visibleCovers[0] && <img src={visibleCovers[0]} alt="Copertina" onClick={() => openLightbox(0)} style={{ width: 'auto', maxWidth: '120px', height: '170px', objectFit: 'contain', alignSelf: 'center', borderRadius: '0.35rem', cursor: 'pointer' }} />}
       {visibleCovers.length > 1 && (
         <button
           type="button"
@@ -112,11 +116,26 @@ export default function EditionCard({ candidate, onUse, onSelect, footer, useIco
         </button>
       )}
       {showAllImages && visibleCovers.slice(1).map((cover, index) => (
-        <img key={`${cover}-${index}`} src={cover} alt={`Immagine variante ${index + 2}`} style={{ width: 'auto', maxWidth: '120px', height: '170px', objectFit: 'contain', alignSelf: 'center', borderRadius: '0.35rem' }} />
+        <img key={`${cover}-${index}`} src={cover} alt={`Immagine variante ${index + 2}`} onClick={() => openLightbox(index + 1)} style={{ width: 'auto', maxWidth: '120px', height: '170px', objectFit: 'contain', alignSelf: 'center', borderRadius: '0.35rem', cursor: 'pointer' }} />
       ))}
     </div>
   ) : (
-    visibleCovers[0] && <img src={visibleCovers[0]} alt="Copertina" style={{ width: variant === 'mini' ? '45px' : '95px', height: 'auto', objectFit: 'contain', borderRadius: '0.35rem' }} />
+    visibleCovers[0] && (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        <img src={visibleCovers[0]} alt="Copertina" onClick={() => openLightbox(0)} style={{ width: variant === 'mini' ? '45px' : '95px', height: 'auto', objectFit: 'contain', borderRadius: '0.35rem', cursor: 'pointer' }} />
+        {variant !== 'mini' && visibleCovers.length > 1 && (
+          <button
+            type="button"
+            onClick={(event) => { event.stopPropagation(); openLightbox(0) }}
+            aria-label={`Mostra altre ${visibleCovers.length - 1} immagini`}
+            title={`+${visibleCovers.length - 1} immagini`}
+            style={{ background: 'none', border: 'none', color: '#0077cc', padding: '0.25rem 0', fontSize: '0.85rem' }}
+          >
+            +{visibleCovers.length - 1}
+          </button>
+        )}
+      </div>
+    )
   )
   const badges = [
     userState?.reading_status ? `${readingStatusLabels[userState.reading_status] || userState.reading_status}${statusDate ? ` · ${statusDate}` : ''}` : null,
@@ -155,6 +174,14 @@ export default function EditionCard({ candidate, onUse, onSelect, footer, useIco
       <p style={{ fontSize: '0.75rem', color: '#888', margin: '0.35rem 0 0' }}>{sourceLabels[candidate.source] || candidate.source}</p>
       {candidate.warnings?.map((warning) => <p key={warning} style={{ background: '#fff3cd', color: '#765c00', padding: '0.5rem', borderRadius: '0.35rem', fontSize: '0.8rem' }}>{warning}</p>)}
       {details.length > 0 && <><button type="button" onClick={(event) => { event.stopPropagation(); setExpanded(!expanded) }} style={{ background: 'none', border: 'none', color: '#0077cc', padding: '0.25rem 0' }}>{expanded ? '− Meno dettagli' : '+ Più dettagli'}</button>{expanded && <div style={{ fontSize: '0.85rem', color: '#555' }}>{details.map((detail, index) => <p key={index} style={{ margin: '0.25rem 0' }}>{detail.label && <strong>{detail.label}: </strong>}{detail.value}</p>)}</div>}</>}
+      {lightbox.open && (
+        <ImageLightbox
+          open={lightbox.open}
+          images={visibleCovers.map((src, index) => ({ src, alt: `Immagine ${index + 1}` }))}
+          initialIndex={lightbox.initialIndex}
+          onClose={closeLightbox}
+        />
+      )}
     </EntityCard>
   )
 }

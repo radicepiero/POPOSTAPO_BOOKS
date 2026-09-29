@@ -123,6 +123,84 @@ export interface Candidate {
   raw?: any
 }
 
+export interface CopyItem {
+  copy_id: number
+  edition_id: number | null
+  edition_variant_id?: number | null
+  variant_label?: string | null
+  work_id: number | null
+  status: string
+  title?: string
+  author?: string
+  covers?: string[] | null
+  publisher?: string | null
+  pages?: number | null
+  acquisition_date?: string
+  acquisition_type_name?: string
+  shelf_name?: string | null
+  library_name?: string | null
+  condition_note?: string | null
+  acquisition_friend_id?: number | null
+  friend_name?: string | null
+  reading_status?: string | null
+  reading_id?: number | null
+}
+
+export interface ReadingItem {
+  reading_id: number
+  edition_id: number
+  edition_variant_id?: number | null
+  variant_label?: string | null
+  start_date?: string
+  end_date?: string
+  current_page: number
+  finished: boolean
+  status: 'active' | 'finished' | 'abandoned'
+  status_changed_at?: string
+  created_at: string
+  is_inactive: boolean
+  rating?: number
+  is_shared: boolean
+  title: string
+  subtitle?: string
+  pages?: number
+  authors: string[]
+  publisher?: string
+  last_activity?: string
+  bookmark_count: number
+  last_note?: string
+  covers?: string[] | null
+}
+
+export function copyToCandidate(copy: CopyItem): Candidate {
+  return {
+    source: 'postgresql',
+    record_type: 'edition',
+    local_edition_id: copy.edition_id || undefined,
+    default_variant_id: copy.edition_variant_id || undefined,
+    title: copy.title,
+    authors: copy.author ? [copy.author] : [],
+    publisher: copy.publisher || undefined,
+    pages: copy.pages || undefined,
+    covers: copy.covers || undefined,
+  }
+}
+
+export function readingToCandidate(reading: ReadingItem): Candidate {
+  return {
+    source: 'postgresql',
+    record_type: 'edition',
+    local_edition_id: reading.edition_id,
+    default_variant_id: reading.edition_variant_id || undefined,
+    title: reading.title,
+    subtitle: reading.subtitle,
+    authors: reading.authors,
+    publisher: reading.publisher,
+    pages: reading.pages,
+    covers: reading.covers || undefined,
+  }
+}
+
 function asString(value: any): string | undefined {
   if (value === undefined || value === null) return undefined
   if (Array.isArray(value)) return asString(value[0])

@@ -184,7 +184,7 @@ export default function EditionImagesEditor({ existingImages = [], existingImage
           </div>
         )}
       </div>
-      {lightbox.open && <ImageLightbox open={lightbox.open} src={lightbox.src} alt={lightbox.alt} onClose={closeLightbox} />}
+      {lightbox.open && <ImageLightbox open={lightbox.open} images={[{ src: lightbox.src, alt: lightbox.alt }]} onClose={closeLightbox} />}
       {cropImage && <ImageCropper imageSrc={cropImage.src} onCropDone={finishCrop} onCancel={cancelCrop} />}
       {capturing && <BookCameraCapture onCapture={handleCapture} onClose={() => setCapturing(null)} />}
     </fieldset>

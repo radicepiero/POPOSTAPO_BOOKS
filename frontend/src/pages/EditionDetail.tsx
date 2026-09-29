@@ -228,7 +228,16 @@ function EditionDetail() {
 
   const perms = (edition.permissions || {}) as EditionPermissions
   const sourceLabel = (source?: string | null) => source === 'series' ? ' · da collana' : ''
-  const displayedEdition = selectedVariant?.covers?.length ? { ...edition, covers: selectedVariant.covers } : edition
+  const variantImageUrls = selectedVariant?.images
+    ? Object.values(selectedVariant.images).flat().map((image) => image.url)
+    : []
+  const displayedCovers = selectedVariant?.covers?.length
+    ? [...selectedVariant.covers]
+    : (edition.covers ? [...edition.covers] : [])
+  for (const url of variantImageUrls) {
+    if (!displayedCovers.includes(url)) displayedCovers.push(url)
+  }
+  const displayedEdition = displayedCovers.length ? { ...edition, covers: displayedCovers } : edition
 
   return (
     <div>

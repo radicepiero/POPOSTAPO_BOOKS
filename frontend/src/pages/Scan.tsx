@@ -5,6 +5,7 @@ import BarcodeScanner from '../components/BarcodeScanner'
 import EditionImagesEditor, { EditionImageFiles, emptyFiles } from '../components/EditionImagesEditor'
 import EntityBadge from '../components/EntityBadge'
 import ImageLightbox from '../components/ImageLightbox'
+import SpeechInput from '../components/SpeechInput'
 import {
   Candidate,
   mapGoogleBooksResponse,
@@ -611,8 +612,18 @@ function Scan() {
           <div className="card" style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><strong>Ricerca per dati bibliografici</strong><button type="button" onClick={() => setShowAdvanced(false)} style={{ background: 'transparent', color: '#555' }}>Chiudi</button></div>
             <label>ISBN<input type="text" value={isbn} onChange={(e) => setIsbn(e.target.value)} /></label>
-            <label>{formLabels.title}<input type="text" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
-            <label>{formLabels.author}<input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} /></label>
+            <label style={{ display: 'block' }}>{formLabels.title}
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} style={{ flex: 1, margin: 0 }} />
+                <SpeechInput onTranscript={(text) => setTitle((current) => current ? `${current} ${text}` : text)} />
+              </div>
+            </label>
+            <label style={{ display: 'block' }}>{formLabels.author}
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} style={{ flex: 1, margin: 0 }} />
+                <SpeechInput onTranscript={(text) => setAuthor((current) => current ? `${current} ${text}` : text)} />
+              </div>
+            </label>
             <button type="submit" disabled={searching} aria-label={scanLabels.search} title={scanLabels.search} style={{ width: '100%', display: 'inline-flex', justifyContent: 'center' }}>{searching ? 'Ricerca in corso...' : <Icon name="search" size={18} />}</button>
             <button type="button" onClick={() => setShowCamera(true)} style={{ display: 'block', marginTop: '0.75rem', padding: 0, background: 'transparent', color: '#1769aa', textDecoration: 'underline' }}>{scanLabels.imageSearch}</button>
           </div>
@@ -796,7 +807,7 @@ function Scan() {
         </div>
       )}
 
-      {lightbox.open && <ImageLightbox open={lightbox.open} src={lightbox.src} alt={lightbox.alt} onClose={closeLightbox} />}
+      {lightbox.open && <ImageLightbox open={lightbox.open} images={[{ src: lightbox.src, alt: lightbox.alt }]} onClose={closeLightbox} />}
       {scanning && <BarcodeScanner onScan={handleScan} onClose={() => setScanning(false)} />}
     </div>
   )

@@ -1,33 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import client from '../api/client'
 import { db } from '../db'
 import CopyFormModal from '../components/CopyFormModal'
+import EditionCard from '../components/EditionCard'
+import { CopyItem, copyToCandidate } from '../services/bibliographicMappers'
 import { buttonLabels, libraryLabels } from '../utils/labels'
 import { Icon } from '../utils/icons'
-
-interface CopyItem {
-  copy_id: number
-  edition_id: number | null
-  edition_variant_id?: number | null
-  variant_label?: string | null
-  work_id: number | null
-  status: string
-  title?: string
-  author?: string
-  covers?: string[] | null
-  publisher?: string | null
-  pages?: number | null
-  acquisition_date?: string
-  acquisition_type_name?: string
-  shelf_name?: string | null
-  library_name?: string | null
-  condition_note?: string | null
-  acquisition_friend_id?: number | null
-  friend_name?: string | null
-  reading_status?: string | null
-  reading_id?: number | null
-}
 
 function formatDate(value?: string) {
   if (!value) return undefined
@@ -113,74 +92,59 @@ function Library() {
       )}
       <h3>{libraryLabels.confirmed}</h3>
       {displayedCopies.map((c) => (
-        <div className="card" key={c.copy_id} style={{ marginBottom: '0.75rem' }}>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            {c.covers?.[0] ? (
-              <Link to={`/editions/${c.edition_id}`}>
-                <img
-                  src={c.covers[0]}
-                  alt={`Copertina di ${c.title || 'questa edizione'}`}
-                  style={{ width: '80px', height: '110px', objectFit: 'contain', borderRadius: '0.4rem' }}
-                />
-              </Link>
-            ) : (
-              <div style={{ width: '80px', height: '110px', background: '#eee', borderRadius: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '0.75rem' }}>{libraryLabels.noCover}</div>
-            )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: '0 0 0.25rem', fontWeight: 600 }}><Link to={`/editions/${c.edition_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{c.title || 'Titolo sconosciuto'}</Link></p>
-              {c.author && <p style={{ margin: '0 0 0.35rem', color: '#555' }}>{c.author}</p>}
-              <p style={{ margin: '0', color: '#666', fontSize: '0.85rem' }}>
-                {c.publisher}{c.publisher && c.pages ? ' · ' : ''}{c.pages ? `${c.pages} pp.` : ''}{c.variant_label ? ` · ${c.variant_label}` : ''}
-              </p>
-              {c.acquisition_type_name && (
-                <p style={{ margin: '0.25rem 0 0', color: '#666', fontSize: '0.8rem' }}>
-                  {c.acquisition_type_name}{c.acquisition_date ? ` · ${formatDate(c.acquisition_date)}` : ''}
-                </p>
-              )}
-              {(c.library_name || c.shelf_name) && (
-                <p style={{ margin: '0.15rem 0 0', color: '#666', fontSize: '0.8rem' }}>
-                  {[c.library_name, c.shelf_name].filter(Boolean).join(' · ')}
-                </p>
-              )}
-              {c.reading_status ? (
-                <p style={{ margin: '0.4rem 0 0', fontSize: '0.85rem' }}>
-                  Stato lettura: <strong>{c.reading_status === 'active' ? 'in corso' : c.reading_status === 'finished' ? 'terminata' : c.reading_status === 'wishlist' ? 'wishlist' : c.reading_status}</strong>
-                </p>
-              ) : (
-                c.edition_id && (
-                  <button
-                    type="button"
-                    onClick={() => startReading(c.copy_id, c.edition_id!)}
-                    style={{ marginTop: '0.5rem', padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
-                  >
-                    <Icon name="addReading" size={14} />
-                    {buttonLabels.startReading}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-          <div style={{ marginTop: '0.75rem' }}>
-            <button
-              type="button"
-              onClick={() => setMenuCopyId(menuCopyId === c.copy_id ? null : c.copy_id)}
-              style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
-            >
-              <Icon name="actions" size={16} />
-              {menuCopyId === c.copy_id ? buttonLabels.closeActions : buttonLabels.actions}
-            </button>
-            {menuCopyId === c.copy_id && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
-                <button type="button" onClick={() => { setEditingCopy(c); setMenuCopyId(null) }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="edit" size={14} />{buttonLabels.modify}</button>
-                <button type="button" onClick={() => copyAction(c.copy_id, 'lend')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="lend" size={14} />{buttonLabels.lend}</button>
-                <button type="button" onClick={() => copyAction(c.copy_id, 'gift')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="gift" size={14} />{buttonLabels.gift}</button>
-                <button type="button" onClick={() => copyAction(c.copy_id, 'sell')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="sell" size={14} />{buttonLabels.sell}</button>
-                <button type="button" onClick={() => copyAction(c.copy_id, 'return')} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="return" size={14} />{buttonLabels.return}</button>
-                <button type="button" onClick={() => deleteCopy(c.copy_id)} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', background: '#b00020', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="delete" size={14} />{buttonLabels.delete}</button>
+        <EditionCard
+          key={c.copy_id}
+          candidate={copyToCandidate(c)}
+          variant="compact"
+          onSelect={() => c.edition_id && navigate(`/editions/${c.edition_id}`)}
+          footer={(
+            <div>
+              <div style={{ color: '#666', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                {c.acquisition_type_name && (
+                  <p style={{ margin: '0.15rem 0' }}>{c.acquisition_type_name}{c.acquisition_date ? ` · ${formatDate(c.acquisition_date)}` : ''}</p>
+                )}
+                {(c.library_name || c.shelf_name) && (
+                  <p style={{ margin: '0.15rem 0' }}>{[c.library_name, c.shelf_name].filter(Boolean).join(' · ')}</p>
+                )}
+                {c.variant_label && <p style={{ margin: '0.15rem 0' }}>{c.variant_label}</p>}
+                {c.reading_status ? (
+                  <p style={{ margin: '0.15rem 0' }}>Stato lettura: <strong>{c.reading_status === 'active' ? 'in corso' : c.reading_status === 'finished' ? 'terminata' : c.reading_status === 'wishlist' ? 'wishlist' : c.reading_status}</strong></p>
+                ) : (
+                  c.edition_id && (
+                    <button
+                      type="button"
+                      onClick={(event) => { event.stopPropagation(); startReading(c.copy_id, c.edition_id!) }}
+                      style={{ marginTop: '0.25rem', padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                    >
+                      <Icon name="addReading" size={14} />
+                      {buttonLabels.startReading}
+                    </button>
+                  )
+                )}
               </div>
-            )}
-          </div>
-        </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={(event) => { event.stopPropagation(); setMenuCopyId(menuCopyId === c.copy_id ? null : c.copy_id) }}
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                >
+                  <Icon name="actions" size={16} />
+                  {menuCopyId === c.copy_id ? buttonLabels.closeActions : buttonLabels.actions}
+                </button>
+                {menuCopyId === c.copy_id && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); setEditingCopy(c); setMenuCopyId(null) }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="edit" size={14} />{buttonLabels.modify}</button>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); copyAction(c.copy_id, 'lend') }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="lend" size={14} />{buttonLabels.lend}</button>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); copyAction(c.copy_id, 'gift') }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="gift" size={14} />{buttonLabels.gift}</button>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); copyAction(c.copy_id, 'sell') }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="sell" size={14} />{buttonLabels.sell}</button>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); copyAction(c.copy_id, 'return') }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="return" size={14} />{buttonLabels.return}</button>
+                    <button type="button" onClick={(event) => { event.stopPropagation(); deleteCopy(c.copy_id) }} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', background: '#b00020', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><Icon name="delete" size={14} />{buttonLabels.delete}</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        />
       ))}
       {displayedCopies.length === 0 && !error && <p>{libraryLabels.empty}</p>}
 
